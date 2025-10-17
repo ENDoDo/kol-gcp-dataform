@@ -114,7 +114,6 @@ resource "google_dataform_repository_workflow_config" "workflow" {
   time_zone     = "Asia/Tokyo"
 }
 
-# --- ▼▼▼▼▼ ここから追加 ▼▼▼▼▼ ---
 # Dataformサービスエージェントの権限設定に必要なプロジェクト情報を取得
 data "google_project" "project" {}
 
@@ -125,7 +124,6 @@ resource "google_service_account_iam_member" "dataform_agent_impersonator" {
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = "serviceAccount:service-${data.google_project.project.number}@gcp-sa-dataform.iam.gserviceaccount.com"
 }
-# --- ▲▲▲▲▲ ここまで追加 ▲▲▲▲▲ ---
 
 # --- Outputs ---
 output "dataform_repository_url" {
