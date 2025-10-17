@@ -21,10 +21,6 @@ terraform {
       source  = "hashicorp/google-beta"
       version = "~> 7.7" # googleプロバイダとバージョンを合わせる
     }
-    null = {
-      source  = "hashicorp/null"
-      version = "~> 3.2" # null_resourceを使用するために必要
-    }
   }
 }
 
