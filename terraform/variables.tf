@@ -38,5 +38,6 @@ variable "dataform_workspace_id" {
 variable "dataform_output_schema" {
   description = "The BigQuery schema (dataset) for Dataform to create tables in."
   type        = string
-  default     = "dataform_mart"
+  # ▼▼▼ ここの値を "kol_analysis" に変更 ▼▼▼
+  default     = "kol_analysis"
 }
