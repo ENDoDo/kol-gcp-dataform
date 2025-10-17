@@ -1,96 +1,120 @@
+-- =================================================================
+-- race.sqlx
+-- 説明: kol_den1とkol_sei1を結合し、レースに関する情報を整形するビュー。
+--       KOL仕様の競馬場コードをJRA-VAN仕様に変換し、各種ラベルやフラグを付与する。
+-- =================================================================
+
+-- Dataform設定ブロック: "race" という名前のビューを作成する
 config {
   type: "table",
-  description: "KOLの出馬表データ(den1, den2)を結合し、レースに関する情報を整形したマスターテーブル。"
+  description: "KOLの出馬表データ(den1, sei1)を結合し、レースに関する情報を整形したマスターテーブル。"
 }
 
+-- 共通テーブル式(CTE)で、`keibajo_code`カラム（KOL仕様）をJRA-VAN仕様に変換
+WITH
+  d1_with_converted_code AS (
+    SELECT
+      *,
+      CASE keibajo_code
+        WHEN '08' THEN '01' -- 札幌
+        WHEN '09' THEN '02' -- 函館
+        WHEN '06' THEN '03' -- 福島
+        WHEN '07' THEN '04' -- 新潟
+        WHEN '04' THEN '05' -- 東京
+        WHEN '05' THEN '06' -- 中山
+        WHEN '02' THEN '07' -- 中京
+        WHEN '00' THEN '08' -- 京都
+        WHEN '01' THEN '09' -- 阪神
+        WHEN '03' THEN '10' -- 小倉
+        ELSE NULL
+      END AS keibajo_code_jvd_from_kol
+    FROM
+      ${ref("kol_den1")} -- Dataformの依存関係を記述 (元のテーブル名を直接記述してもOK)
+  )
 SELECT
-    d1.race_code_kol,
-    -- ▼▼▼▼▼ ここを修正 ▼▼▼▼▼
-    -- JRA-VAN仕様のレースコードを各パーツから結合して生成
-    d1.kaisai_nengappi || d1.keibajo_code || d1.kaisai_kaiji || d1.kaisai_nichiji || d1.race_bango AS race_code_jvd,
-    -- ▲▲▲▲▲ ここを修正 ▲▲▲▲▲
-    PARSE_DATETIME('%Y%m%d%H%M', d1.kaisai_nen || d1.kaisai_nichiji || d1.hasso_jikoku) AS hasso_date,
-    d1.kaiji,
-    d1.nichiji,
-    d1.race_bango,
-    SAFE_CAST(d1.race_bango AS INT64) AS race_bango_num,
-    d2.kyosomei_15moji AS race_name,
-    CASE
-        WHEN SAFE_CAST(d1.kyori AS INT64) <= 1399 THEN '短距離'
-        WHEN SAFE_CAST(d1.kyori AS INT64) BETWEEN 1400 AND 1699 THEN 'マイル'
-        WHEN SAFE_CAST(d1.kyori AS INT64) BETWEEN 1700 AND 2099 THEN '中距離'
-        WHEN SAFE_CAST(d1.kyori AS INT64) >= 2100 THEN '長距離'
-        ELSE NULL
-    END AS kyori_kubun,
-    d1.keibajo_code AS keibajo_code_jvd,
-    d1.keibajo_code_kol,
-    CASE d1.keibajo_code
-        WHEN '01' THEN '札幌' WHEN '02' THEN '函館' WHEN '03' THEN '福島'
-        WHEN '04' THEN '新潟' WHEN '05' THEN '東京' WHEN '06' THEN '中山'
-        WHEN '07' THEN '中京' WHEN '08' THEN '京都' WHEN '09' THEN '阪神'
-        WHEN '10' THEN '小倉' ELSE NULL
-    END AS keibajo_name,
-    SAFE_CAST(d1.kyori AS INT64) AS kyori,
-    d1.chuo_chiho_kubun,
-    CASE d1.chuo_chiho_kubun
-        WHEN '1' THEN '中央' WHEN '2' THEN '南関東' WHEN '3' THEN 'その他の公営'
-        WHEN '4' THEN '道営' WHEN '5' THEN '外国' ELSE NULL
-    END AS chuo_chiho_kubun_label,
-    d2.kyosomei_15moji,
-    d2.kyosomei_7moji,
-    d2.grade_code,
-    CASE d2.grade_code
-        WHEN 'A' THEN 'GⅠ' WHEN 'B' THEN 'GⅡ' WHEN 'C' THEN 'GⅢ'
-        WHEN 'D' THEN 'JGⅠ' WHEN 'E' THEN 'JGⅡ' WHEN 'F' THEN 'JGⅢ'
-        ELSE NULL
-    END AS grade_code_label,
-    d2.jpn_flag,
-    CASE d2.jpn_flag WHEN '1' THEN '国際格付けレース（G）' WHEN '2' THEN 'それ以外の重賞（Jpn）' ELSE NULL END AS jpn_flag_label,
-    d2.bettei_barei_handicap_summary_code,
-    CASE d2.bettei_barei_handicap_summary_code
-        WHEN '1' THEN '別定' WHEN '2' THEN '馬齢' WHEN '3' THEN 'ハンデ'
-        WHEN '4' THEN '定量' WHEN '5' THEN '規定(道営のみ)' ELSE NULL
-    END AS bettei_barei_handicap_summary_code_label,
-    d2.bettei_barei_handicap_detail,
-    d2.kyoso_joken_age_limit,
-    CASE d2.kyoso_joken_age_limit
-        WHEN '03' THEN '3歳' WHEN '04' THEN '4歳' WHEN '05' THEN '5歳'
-        WHEN '10' THEN '4歳以上' WHEN '11' THEN '5歳以上' ELSE NULL
-    END AS kyoso_joken_age_limit_label,
-    d2.kyoso_joken_kubun,
-    CASE d2.kyoso_joken_kubun
-        WHEN '01' THEN '新馬' WHEN '02' THEN '未出走' WHEN '03' THEN '未勝利'
-        WHEN '05' THEN '1勝クラス' WHEN '10' THEN '2勝クラス' WHEN '16' THEN '3勝クラス'
-        WHEN '99' THEN 'オープン' ELSE NULL
-    END AS kyoso_joken_kubun_label,
-    d1.heichi_shogai_kubun,
-    CASE d1.heichi_shogai_kubun WHEN '1' THEN '平地' WHEN '2' THEN '障害' ELSE NULL END AS heichi_shogai_kubun_label,
-    d1.track_code1_dirtsiba,
-    CASE d1.track_code1_dirtsiba WHEN '1' THEN '芝' WHEN '2' THEN 'ダ' ELSE NULL END AS track_code1_dirtsiba_label,
-    d1.track_code2_LRS,
-    CASE d1.track_code2_LRS WHEN '1' THEN '右' WHEN '2' THEN '左' WHEN '3' THEN '直線' ELSE NULL END AS track_code2_LRS_label,
-    d1.track_code3_inout,
-    CASE d1.track_code3_inout
-        WHEN '1' THEN '内' WHEN '2' THEN '外' WHEN '3' THEN '外→内'
-        WHEN '4' THEN 'タスキ' WHEN '5' THEN '大障害' WHEN '6' THEN '内2週'
-        WHEN '7' THEN '内→外' ELSE NULL
-    END AS track_code3_inout_label,
-    d1.course_kubun,
-    CASE d1.course_kubun WHEN '1' THEN 'A' WHEN '2' THEN 'B' WHEN '3' THEN 'C' WHEN '4' THEN 'D' ELSE NULL END AS course_kubun_label,
-    SAFE_CAST(d1.toroku_tosu_num AS INT64) AS toroku_tosu_num,
-    SAFE_CAST(d1.torikeshi_tosu_num AS INT64) AS torikeshi_tosu_num,
-    (d2.bettei_barei_handicap_summary_code IN ('1', '3')) AS juryo_handicap_flag,
-    (d1.keibajo_code IN ('01', '02', '03', '10')) AS keibajo_komawari_curve4_flag,
-    (d1.keibajo_code IN ('05', '07', '08', '09', '04')) AS keibajo_omawari_curve4_flag,
-    (
-        (d1.keibajo_code = '09' AND d1.track_code1_dirtsiba = '2') OR
-        (d1.keibajo_code = '09' AND d1.track_code3_inout = '1') OR
-        (d1.keibajo_code IN ('01', '02', '03', '06', '08', '10'))
-    ) AS keibajo_straight_short_flag,
-    (d1.keibajo_code IN ('04', '05')) AS keibajo_straight_long_flag,
-    CURRENT_TIMESTAMP() AS created,
-    CURRENT_TIMESTAMP() AS modified
+  d1.race_code_kol,
+  -- JRA-VAN仕様のレースコードを、変換後のコードを使って生成
+  d1.kaisai_nengappi || d1.keibajo_code_jvd_from_kol || d1.kaisai_kaiji || d1.kaisai_nichiji || d1.race_num AS race_code_jvd,
+  FORMAT_DATETIME('%Y/%m/%d %H:%M:%S', PARSE_DATETIME('%Y%m%d%H%M', d1.kaisai_nengappi || REPLACE(d1.hasso_jikoku, ':', ''))) AS hasso_date,
+  d1.kaisai_kaiji,
+  d1.kaisai_nichiji,
+  d1.race_num AS race_bango,
+  SAFE_CAST(d1.race_num AS INT64) AS race_bango_num,
+  d1.kyosomei_15moji AS race_name,
+  CASE
+    WHEN SAFE_CAST(d1.kyori AS INT64) <= 1399 THEN '短距離'
+    WHEN SAFE_CAST(d1.kyori AS INT64) BETWEEN 1400 AND 1699 THEN 'マイル'
+    WHEN SAFE_CAST(d1.kyori AS INT64) BETWEEN 1700 AND 2099 THEN '中距離'
+    WHEN SAFE_CAST(d1.kyori AS INT64) >= 2100 THEN '長距離'
+    ELSE NULL
+  END AS kyori_kubun,
+  d1.keibajo_code_jvd_from_kol AS keibajo_code_jvd,
+  d1.keibajo_code AS keibajo_code_kol,
+  CASE d1.keibajo_code_jvd_from_kol
+    WHEN '01' THEN '札幌' WHEN '02' THEN '函館' WHEN '03' THEN '福島'
+    WHEN '04' THEN '新潟' WHEN '05' THEN '東京' WHEN '06' THEN '中山'
+    WHEN '07' THEN '中京' WHEN '08' THEN '京都' WHEN '09' THEN '阪神'
+    WHEN '10' THEN '小倉' ELSE NULL
+  END AS keibajo_name,
+  SAFE_CAST(d1.kyori AS INT64) AS kyori,
+  d1.chuo_chiho_kubun,
+  CASE d1.chuo_chiho_kubun
+    WHEN '1' THEN '中央' WHEN '2' THEN '南関東' WHEN '3' THEN 'その他の公営'
+    WHEN '4' THEN '道営' WHEN '5' THEN '外国' ELSE NULL
+  END AS chuo_chiho_kubun_label,
+  d1.kyosomei_15moji,
+  d1.kyosomei_7moji,
+  d1.grade_code,
+  CASE d1.grade_code
+    WHEN 'A' THEN 'GⅠ' WHEN 'B' THEN 'GⅡ' WHEN 'C' THEN 'GⅢ'
+    WHEN 'D' THEN 'JGⅠ' WHEN 'E' THEN 'JGⅡ' WHEN 'F' THEN 'JGⅢ'
+    ELSE NULL
+  END AS grade_code_label,
+  d1.jpn_flag,
+  CASE d1.jpn_flag WHEN '1' THEN '国際格付けレース（G）' WHEN '2' THEN 'それ以外の重賞（Jpn）' ELSE NULL END AS jpn_flag_label,
+  d1.bettei_barei_handicap_summary_code,
+  CASE d1.bettei_barei_handicap_summary_code
+    WHEN '1' THEN '別定' WHEN '2' THEN '馬齢' WHEN '3' THEN 'ハンデ'
+    WHEN '4' THEN '定量' WHEN '5' THEN '規定(道営のみ)' ELSE NULL
+  END AS bettei_barei_handicap_summary_code_label,
+  d1.bettei_barei_handicap_detail,
+  d1.kyoso_joken_age_limit,
+  CASE d1.kyoso_joken_age_limit
+    WHEN '03' THEN '3歳' WHEN '04' THEN '4歳' WHEN '05' THEN '5歳'
+    WHEN '10' THEN '4歳以上' WHEN '11' THEN '5歳以上' ELSE NULL
+  END AS kyoso_joken_age_limit_label,
+  d1.kyoso_joken_kubun,
+  CASE d1.kyoso_joken_kubun
+    WHEN '01' THEN '新馬' WHEN '02' THEN '未出走' WHEN '03' THEN '未勝利'
+    WHEN '05' THEN '1勝クラス' WHEN '10' THEN '2勝クラス' WHEN '16' THEN '3勝クラス'
+    WHEN '99' THEN 'オープン' ELSE NULL
+  END AS kyoso_joken_kubun_label,
+  d1.heichi_shogai_kubun,
+  CASE d1.heichi_shogai_kubun WHEN '1' THEN '平地' WHEN '2' THEN '障害' ELSE NULL END AS heichi_shogai_kubun_label,
+  s1.track_code1_dirtsiba,
+  CASE s1.track_code1_dirtsiba WHEN '1' THEN '芝' WHEN '2' THEN 'ダ' ELSE NULL END AS track_code1_dirtsiba_label,
+  s1.track_code2_LRS,
+  CASE s1.track_code2_LRS WHEN '1' THEN '右' WHEN '2' THEN '左' WHEN '3' THEN '直線' ELSE NULL END AS track_code2_LRS_label,
+  s1.track_code3_inout,
+  CASE s1.track_code3_inout
+    WHEN '1' THEN '内' WHEN '2' THEN '外' WHEN '3' THEN '外→内'
+    WHEN '4' THEN 'タスキ' WHEN '5' THEN '大障害' WHEN '6' THEN '内2週'
+    WHEN '7' THEN '内→外' ELSE NULL
+  END AS track_code3_inout_label,
+  d1.course_kubun,
+  CASE d1.course_kubun WHEN '1' THEN 'A' WHEN '2' THEN 'B' WHEN '3' THEN 'C' WHEN '4' THEN 'D' ELSE NULL END AS course_kubun_label,
+  (d1.bettei_barei_handicap_summary_code IN ('1', '3')) AS juryo_handicap_flag,
+  (d1.keibajo_code_jvd_from_kol IN ('01', '02', '03', '10')) AS keibajo_komawari_curve4_flag,
+  (d1.keibajo_code_jvd_from_kol IN ('05', '07', '08', '09', '04')) AS keibajo_omawari_curve4_flag,
+  (
+    (d1.keibajo_code_jvd_from_kol = '09' AND s1.track_code1_dirtsiba = '2') OR
+    (d1.keibajo_code_jvd_from_kol = '09' AND s1.track_code3_inout = '1') OR
+    (d1.keibajo_code_jvd_from_kol IN ('01', '02', '03', '06', '08', '10'))
+  ) AS keibajo_straight_short_flag,
+  (d1.keibajo_code_jvd_from_kol IN ('04', '05')) AS keibajo_straight_long_flag,
+  CURRENT_TIMESTAMP() AS created,
+  CURRENT_TIMESTAMP() AS modified
 FROM
-    ${ref("kol_den1")} AS d1
+  d1_with_converted_code AS d1
 LEFT JOIN
-    ${ref("kol_den2")} AS d2 ON d1.race_code_kol = SUBSTR(d2.race_code_uma_kol, 1, 14)
+  ${ref("kol_sei1")} AS s1 ON d1.race_code_kol = s1.race_code_kol -- Dataformの依存関係を記述
