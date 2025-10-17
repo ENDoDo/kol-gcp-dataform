@@ -1,0 +1,9 @@
+{
+  "defaultSchema": "dataform_mart",
+  "assertionSchema": "dataform_assertions",
+  "warehouse": "bigquery",
+  "defaultDatabase": "smartkeiba",
+  "vars": {
+    "source_schema": "kol_keiba"
+  }
+}

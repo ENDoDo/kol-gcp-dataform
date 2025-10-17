@@ -1,0 +1,14 @@
+-- 既存のBigQueryテーブルをDataformのソースとして宣言します。
+---
+-- これにより、他のSQLXファイルから `ref("kol_den1")` のように参照できます。
+
+-- このファイル自体はテーブルを作成しないため、typeを "declaration" に設定します。
+config { type: "declaration" }
+
+-- `schema`には、dataform.jsonで定義した変数 `source_schema` ("kol_keiba") を使用します。
+-- `name`には、BigQuery上の実際のテーブル名を指定します。
+
+declare_source { schema: dataform.projectConfig.vars.source_schema, name: "kol_den1" }
+declare_source { schema: dataform.projectConfig.vars.source_schema, name: "kol_den2" }
+declare_source { schema: dataform.projectConfig.vars.source_schema, name: "kol_sei1" }
+declare_source { schema: dataform.projectConfig.vars.source_schema, name: "kol_sei2" }
