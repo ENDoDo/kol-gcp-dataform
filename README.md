@@ -14,13 +14,13 @@
 
 ```mermaid
 graph TD
-    subgraph データ取り込み (Ingestion)
+    subgraph "データ取り込み (Ingestion)"
         A[1. ユーザーがZIPファイルをGCSにアップロード] --> B(GCS Bucket);
         B -- Eventarcトリガー --> C{Cloud Functions};
         C -- データをパースしUpsert --> D[BigQuery Raw Tables<br>(kol_keiba.kol_den1, etc.)];
     end
 
-    subgraph データ変換 (Transformation)
+    subgraph "データ変換 (Transformation)"
         D -- ソースとして参照 --> E{Dataform};
         E -- 変換クエリ(race.sqlx)を実行 --> F[BigQuery Mart Tables<br>(dataform_mart.race, etc.)];
     end
