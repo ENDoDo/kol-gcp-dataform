@@ -2,6 +2,7 @@
   "warehouse": "bigquery",
   "defaultDatabase": "smartkeiba",
   "defaultSchema": "dataform_mart",
+  "defaultLocation": "asia-northeast1",
   "vars": {
     "source_schema": "kol_keiba"
   }
