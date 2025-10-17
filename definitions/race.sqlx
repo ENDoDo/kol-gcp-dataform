@@ -5,9 +5,7 @@ config {
 
 SELECT
     d1.race_code_kol,
-    -- ▼▼▼▼▼ ここを修正 ▼▼▼▼▼
-    d1.keibajo_code_jvd AS race_code_jvd, -- d1からkeibajo_code_jvdを取得し、race_code_jvdとして命名
-    -- ▲▲▲▲▲ ここを修正 ▲▲▲▲▲
+    d1.keibajo_code_jvd AS race_code_jvd,
     PARSE_DATETIME('%Y%m%d%H%M', d1.kaisai_nen || d1.kaisai_nichiji || d1.hasso_jikoku) AS hasso_date,
     d1.kaiji,
     d1.nichiji,
@@ -83,4 +81,13 @@ SELECT
     (d1.keibajo_code_jvd IN ('05', '07', '08', '09', '04')) AS keibajo_omawari_curve4_flag,
     (
         (d1.keibajo_code_jvd = '09' AND d1.track_code1_dirtsiba = '2') OR
-        (d1.keibajo_code_jvd = '09' AND d1
+        (d1.keibajo_code_jvd = '09' AND d1.track_code3_inout = '1') OR
+        (d1.keibajo_code_jvd IN ('01', '02', '03', '06', '08', '10'))
+    ) AS keibajo_straight_short_flag,
+    (d1.keibajo_code_jvd IN ('04', '05')) AS keibajo_straight_long_flag,
+    CURRENT_TIMESTAMP() AS created,
+    CURRENT_TIMESTAMP() AS modified
+FROM
+    ${ref("kol_den1")} AS d1
+LEFT JOIN
+    ${ref("kol_den2")} AS d2 ON d1.race_code_kol = SUBSTR(d2.race_code_uma_kol, 1, 14)
