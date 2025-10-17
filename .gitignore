@@ -1,14 +1,20 @@
-# Terraform files
-.terraform/
-.terraform.lock.hcl
+# Terraform state files
 *.tfstate
 *.tfstate.*
+.terraform.lock.hcl
 crash.log
 *.tfvars
+
+# Terraform provider cache
+.terraform/
+
+# Node.js dependencies
+# (npm installで生成される大量のファイル)
+node_modules/
 
 # Python cache
 __pycache__/
 *.pyc
 
-# macOS
+# macOS system files
 .DS_Store
