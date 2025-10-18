@@ -14,8 +14,8 @@ config {
     race_code_kol: "KOL仕様レースID 年月日6桁+KOL仕様開催場所コード2桁+開催回次2桁+開催日次2桁+レース番号2桁",
     race_code_jvd: "JRA-VAN仕様 年4桁+月2桁+日2桁+JRA-VAN仕様競馬場コード2桁+回次2桁+日次2桁+レース番号2桁",
     hasso_date: "発走日時。kaisai_nengappi・hasso_jikokuから算出",
-    kaisai_kaiji: "開催回次",
-    kaisai_nichiji: "開催日次",
+    kaiji: "開催回次",
+    nichiji: "開催日次",
     race_bango: "レース番号 2桁",
     race_bango_num: "レース番号 整数型",
     race_name: "レース名。オープン競走では競走名とグレード、それ以外では条件を組み合わせて生成",
@@ -23,7 +23,6 @@ config {
     keibajo_code_jvd: "JRA-VAN仕様競馬場コード",
     keibajo_code_kol: "KOL仕様競馬場コード",
     keibajo_name: "札幌/函館/福島/新潟/東京/中山/中京/京都/阪神/小倉",
-    kyori: "距離",
     chuo_chiho_kubun: "中央･地方･外国 区分",
     chuo_chiho_kubun_label: "chuo_chiho_kubunをもとに対応 中央/南関東/その他の公営/道営/外国",
     kyosomei_15moji: "競走名15文字",
@@ -46,9 +45,10 @@ config {
     track_code2_LRS: "トラックコード 右･左",
     track_code2_LRS_label: "track_code2をもとに対応 右/左/直線",
     track_code3_inout: "トラックコード 内･外",
-    track_code3_label: "track_code3をもとに対応 内/外/外→内/タスキ/大障害/内２週/内→外",
+    track_code3_inout_label: "track_code3をもとに対応 内/外/外→内/タスキ/大障害/内２週/内→外",
     course_kubun: "コース区分",
     course_kubun_label: "course_kubunをもとに対応 A/B/C/D/A1/A2/E",
+    kyori: "距離",
     toroku_tosu_num: "登録頭数 整数型",
     torikeshi_tosu_num: "取消頭数 整数型",
     juryo_handicap_flag: "重量種別が別定または馬齢の場合に「はい」",
@@ -86,8 +86,8 @@ SELECT
   d1.race_code_kol,
   d1.kaisai_nengappi || d1.keibajo_code_jvd_from_kol || d1.kaisai_kaiji || d1.kaisai_nichiji || d1.race_num AS race_code_jvd,
   FORMAT_DATETIME('%Y/%m/%d %H:%M:%S', PARSE_DATETIME('%Y%m%d%H%M', d1.kaisai_nengappi || REPLACE(d1.hasso_jikoku, ':', ''))) AS hasso_date,
-  d1.kaisai_kaiji,
-  d1.kaisai_nichiji,
+  d1.kaisai_kaiji AS kaiji,
+  d1.kaisai_nichiji AS nichiji,
   d1.race_num AS race_bango,
   SAFE_CAST(d1.race_num AS INT64) AS race_bango_num,
   CASE
@@ -222,7 +222,7 @@ SELECT
     WHEN '5' THEN '内２週'
     WHEN '6' THEN '内→外'
     ELSE NULL
-  END AS track_code3_label,
+  END AS track_code3_inout_label,
   d1.course_kubun,
   CASE d1.course_kubun
     WHEN '0' THEN 'A'
@@ -234,6 +234,7 @@ SELECT
     WHEN '6' THEN 'E'
     ELSE NULL
   END AS course_kubun_label,
+  SAFE_CAST(d1.kyori AS INT64) AS kyori,
   SAFE_CAST(d1.toroku_tosu AS INT64) AS toroku_tosu_num,
   SAFE_CAST(d1.torikeshi_tosu AS INT64) AS torikeshi_tosu_num,
   CASE
