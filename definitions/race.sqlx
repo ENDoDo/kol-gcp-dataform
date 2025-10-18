@@ -26,6 +26,7 @@ config {
     kyori: "距離",
     chuo_chiho_kubun: "中央･地方･外国 区分",
     chuo_chiho_kubun_label: "chuo_chiho_kubunをもとに対応 中央/南関東/その他の公営/道営/外国",
+    kyosomei_15moji: "競走名15文字",
     kyosomei_7moji: "競走名7文字",
     grade_code: "グレードコード",
     grade_code_label: "grade_codeをもとに対応 GⅠ/GⅡ/GⅢ/JGⅠ/JGⅡ/JGⅢ",
