@@ -35,7 +35,7 @@ config {
     bettei_barei_handicap_summary_code_label: "bettei_barei_handicap_summary_codeをもとに対応 別定/馬齢/ハンデ/定量/規定(道営のみ)",
     bettei_barei_handicap_detail: "別定/馬齢/ハンデ/定量/規定（道営のみ）/牡 55 K/牝 53 K/牝2K減",
     kyoso_joken_age_limit: "競走種別コード2 条件年齢制限",
-    kyoso_joken_age_limit_label: "kyoso_joken_age_limitをもとに対応 3歳/4歳/5歳/4,5,6歳/5,6,7歳/4歳以上/5歳以上/4,5歳/5,6歳",
+    kyoso_joken_age_limit_label: "kyoso_joken_age_limitをもとに対応 2歳/3歳/4歳/3,4,5歳/4,5,6歳/3歳以上/4歳以上/3,4歳/4,5歳",
     kyoso_joken_kubun: "競走条件コード1 競走条件区分",
     kyoso_joken_kubun_label: "kyoso_joken_kubunをもとに対応 新馬/未出走/未勝利/1勝クラス/2勝クラス/3勝クラス/オープン",
     heichi_shogai_kubun: "平地･障害 区分",
@@ -91,7 +91,6 @@ SELECT
   d1.race_num AS race_bango,
   SAFE_CAST(d1.race_num AS INT64) AS race_bango_num,
   CASE
-    -- クラスが「オープン」の場合
     WHEN d1.kyoso_joken_kubun = '00004' THEN
       CONCAT(
         d1.kyosomei_15moji,
@@ -101,11 +100,21 @@ SELECT
           ELSE ''
         END
       )
-    -- クラスが「オープン」以外の場合
     ELSE
       CONCAT(
         CASE WHEN d1.heichi_shogai_kubun = '1' THEN '障害' ELSE '' END,
-        CASE d1.kyoso_joken_age_limit WHEN '0' THEN '3歳' WHEN '1' THEN '4歳' WHEN '2' THEN '5歳' WHEN '3' THEN '4,5,6歳' WHEN '4' THEN '5,6,7歳' WHEN '5' THEN '4歳以上' WHEN '6' THEN '5歳以上' WHEN '7' THEN '4,5歳' WHEN '8' THEN '5,6歳' ELSE '' END,
+        CASE d1.kyoso_joken_age_limit
+          WHEN '0' THEN '2歳'
+          WHEN '1' THEN '3歳'
+          WHEN '2' THEN '4歳'
+          WHEN '3' THEN '3,4,5歳'
+          WHEN '4' THEN '4,5,6歳'
+          WHEN '5' THEN '3歳以上'
+          WHEN '6' THEN '4歳以上'
+          WHEN '7' THEN '3,4歳'
+          WHEN '8' THEN '4,5歳'
+          ELSE ''
+        END,
         CASE d1.kyoso_joken_kubun
           WHEN '00001' THEN '新馬'
           WHEN '00002' THEN '未出走'
@@ -170,15 +179,15 @@ SELECT
   d1.bettei_barei_handicap_detail,
   d1.kyoso_joken_age_limit,
   CASE d1.kyoso_joken_age_limit
-    WHEN '0' THEN '3歳'
-    WHEN '1' THEN '4歳'
-    WHEN '2' THEN '5歳'
-    WHEN '3' THEN '4,5,6歳'
-    WHEN '4' THEN '5,6,7歳'
-    WHEN '5' THEN '4歳以上'
-    WHEN '6' THEN '5歳以上'
-    WHEN '7' THEN '4,5歳'
-    WHEN '8' THEN '5,6歳'
+    WHEN '0' THEN '2歳'
+    WHEN '1' THEN '3歳'
+    WHEN '2' THEN '4歳'
+    WHEN '3' THEN '3,4,5歳'
+    WHEN '4' THEN '4,5,6歳'
+    WHEN '5' THEN '3歳以上'
+    WHEN '6' THEN '4歳以上'
+    WHEN '7' THEN '3,4歳'
+    WHEN '8' THEN '4,5歳'
     ELSE NULL
   END AS kyoso_joken_age_limit_label,
   d1.kyoso_joken_kubun,
