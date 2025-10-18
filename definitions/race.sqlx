@@ -132,7 +132,6 @@ SELECT
     WHEN '07' THEN '中京' WHEN '08' THEN '京都' WHEN '09' THEN '阪神'
     WHEN '10' THEN '小倉' ELSE NULL
   END AS keibajo_name,
-  SAFE_CAST(d1.kyori AS INT64) AS kyori,
   d1.chuo_chiho_kubun,
   CASE d1.chuo_chiho_kubun
     WHEN '0' THEN '中央'
