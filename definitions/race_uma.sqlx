@@ -1,0 +1,427 @@
+-- =================================================================
+-- race_uma.sqlx
+-- 説明: kol_den2, kol_sei1, kol_sei2, kol_ket, raceを結合し、出走馬に関する情報を整形するテーブル。
+--       KOL仕様のコードをJRA-VAN仕様に変換し、各種ラベルやフラグ、計算済みのフィールドを付与する。
+-- =================================================================
+
+-- Dataform設定ブロック
+config {
+  type: "table",
+  schema: "kol_analysis",
+  name: "race_uma",
+  description: "KOLの出馬表(den2), 成績(sei1, sei2), 血統(ket), レース(race)データを結合し、出走馬に関する情報を整形したマスターテーブル。",
+  columns: {
+    race_code_uma_kol: "KOL仕様馬毎レースID",
+    race_code_uma_jvd: "JRA-VAN仕様馬毎レースID",
+    race_code_kol: "KOL仕様レースID",
+    race_code_jvd: "JRA-VAN仕様レースID",
+    keibajo_code_jvd: "JRA-VAN仕様競馬場コード",
+    keibajo_code_kol: "KOL仕様競馬場コード",
+    hasso_date: "発走日時",
+    kaiji: "開催回次",
+    nichiji: "開催日次",
+    race_bango: "レース番号 2桁",
+    race_bango_num: "レース番号 整数型",
+    waku_kubun: "枠番区分",
+    wakuban: "枠番",
+    umaban: "馬番 2桁",
+    umaban_num: "馬番 整数型",
+    umaban_even: "馬番が偶数",
+    bamei: "馬名",
+    seibetsu_code: "性別コード",
+    seibetsu_code_label: "性別 牡/牝/せん",
+    barei: "馬齢",
+    barei_num: "馬齢 整数型",
+    futan_juryo: "負担重量 単位:0.1kg",
+    futan_juryo_float: "負担重量 小数点第一位まで",
+    blinker_shiyo_kubun: "ブリンカー使用区分",
+    blinker_shiyo_kubun_label: "ブリンカー使用 はい/いいえ",
+    rating: "レイティング 3桁",
+    rating_float: "レイティング 小数点第一位まで",
+    banushimei: "馬主名",
+    banushimei_ryakusho: "馬主名略称",
+    ketto_toroku_bango_kol: "KOL仕様 血統登録番号(馬コード)",
+    ketto1_f_hanshoku_toroku_bango: "血統情報 父 繁殖登録番号",
+    ketto1_f_bamei: "血統情報 父 馬名",
+    ketto2_m_hanshoku_toroku_bango: "血統情報 母 繁殖登録番号",
+    ketto2_m_bamei: "血統情報 母 馬名",
+    ketto5_mf_hanshoku_toroku_bango: "血統情報 母父 繁殖登録番号",
+    ketto5_mf_bamei: "血統情報 母父 馬名",
+    kyuyo_riyu: "休養理由",
+    kishumei: "騎手名",
+    kishumei_ryakusho: "騎手名略称",
+    kishu_code: "騎手コード",
+    kishu_tozai_shozoku_code: "騎手東西所属区分",
+    kishu_tozai_shozoku_code_label: "騎手東西所属 西/東/招待",
+    kishu_minarai_code: "騎手見習コード",
+    kishu_minarai_code_label: "騎手見習",
+    kishu_norikawari_kubun: "騎手乗り替わり区分",
+    kishu_norikawari_kubun_label: "騎手乗り替わり はい/いいえ",
+    kishu_shozokubasho_code: "騎手所属場所コード",
+    kishu_shozokubasho_code_label: "騎手所属場所",
+    kishu_shozoku_chokyoshi_code: "騎手が所属する調教師コード",
+    chokyoshi_code: "調教師コード",
+    chokyoshimei: "調教師名",
+    chokyoshimei_ryakusho: "調教師名略称",
+    chokyoshi_shozokubasho_code: "調教師所属場所コード",
+    chokyoshi_shozokubasho_code_label: "調教師所属場所",
+    chokyoshi_tracen_kubun: "調教師トレセン区分",
+    chokyoshi_tracen_kubun_label: "調教師トレセン区分",
+    chokyo_flag: "調教フラグ",
+    chokyo_flag_label: "調教フラグ はい/いいえ",
+    chokyo_kijosha: "調教騎乗者",
+    chokyo_date: "調教年月日",
+    chokyo_basho: "調教場所",
+    chokyo_course: "調教コース",
+    chokyo_babajotai: "調教馬場状態",
+    chokyo_1f: "調教タイム 1F",
+    chokyo_3f: "調教タイム 3F",
+    chokyo_4f: "調教タイム 4F",
+    chokyo_5f: "調教タイム 5F",
+    chokyo_6f: "調教タイム 6F",
+    chokyo_7f: "調教タイム 7F",
+    chokyo_8f: "調教タイム 8F",
+    chokyo_ichidori: "調教位置取り",
+    chokyo_asiiro: "調教脚色",
+    chokyo_yajirushi: "調教矢印",
+    chokyo_yajirushi_label: "調教矢印(ラベル)",
+    chokyo_reigai: "調教例外",
+    chokyo_awase: "調教併せ",
+    chokyo_awase_kubun: "調教併せ区分",
+    chokyo_awase_flag: "調教併せフラグ",
+    chokyo_awase_flag_label: "調教併せフラグ(ラベル)",
+    chokyo_tanpyo: "ブックによる調教短評",
+    chokyo_honsu_course: "調教本数 コース",
+    chokyo_honsu_course_num: "調教本数 コース(整数)",
+    chokyo_honsu_hanro: "調教本数 坂路",
+    chokyo_honsu_hanro_num: "調教本数 坂路(整数)",
+    chokyo_honsu_pool: "調教本数 プール",
+    chokyo_honsu_pool_num: "調教本数 プール(整数)",
+    speed_sisu_last_1: "スピード指数 1走前",
+    speed_sisu_last_1_float: "スピード指数 1走前(小数点)",
+    speed_sisu_last_2: "スピード指数 2走前",
+    speed_sisu_last_2_float: "スピード指数 2走前(小数点)",
+    speed_sisu_last_3: "スピード指数 3走前",
+    speed_sisu_last_3_float: "スピード指数 3走前(小数点)",
+    speed_sisu_last_4: "スピード指数 4走前",
+    speed_sisu_last_4_float: "スピード指数 4走前(小数点)",
+    speed_sisu_last_5: "スピード指数 5走前",
+    speed_sisu_last_5_float: "スピード指数 5走前(小数点)",
+    rotation1: "ローテーション1週前",
+    rotation1_label: "ローテーション1週前(ラベル)",
+    rotation2: "ローテーション2週前",
+    rotation2_label: "ローテーション2週前(ラベル)",
+    rotation3: "ローテーション3週前",
+    rotation3_label: "ローテーション3週前(ラベル)",
+    rotation4: "ローテーション4週前",
+    rotation4_label: "ローテーション4週前(ラベル)",
+    rotation5: "ローテーション5週前",
+    rotation5_label: "ローテーション5週前(ラベル)",
+    rotation6: "ローテーション6週前",
+    rotation6_label: "ローテーション6週前(ラベル)",
+    rotation7: "ローテーション7週前",
+    rotation7_label: "ローテーション7週前(ラベル)",
+    rotation8: "ローテーション8週前",
+    rotation8_label: "ローテーション8週前(ラベル)",
+    bataiju: "馬体重(kg)",
+    bataiju_kubun: "馬体重区分",
+    bataiju_zensou: "前走 馬体重kg",
+    bataiju_kubun_zensou: "前走 馬体重区分",
+    kyori_kubun_zensou: "前走 距離区分",
+    kyori_extension_flag: "距離延長フラグ",
+    kyori_shortening_flag: "距離短縮フラグ",
+    ensei_kansai_to_kantou_flag: "遠征 関西→関東",
+    ensei_kantou_to_kansai_flag: "遠征 関東→関西",
+    ensei_flag: "遠征フラグ",
+    track_code1_label_dirtsiba_zensou: "前走 ダ/芝",
+    siba_to_dirt_flag: "芝→ダ替わりフラグ",
+    dirt_to_siba_flag: "ダ→芝替わりフラグ",
+    record_shisu: "レコード指数",
+    record_shisu_num: "レコード指数(整数)",
+    zogen_sa: "増減差",
+    zogen_sa_num: "増減差(整数)",
+    tansho_ninkijun: "単勝人気順",
+    tansho_ninkijun_num: "単勝人気順(整数)",
+    tansho_odds: "単勝オッズ",
+    tansho_odds_float: "単勝オッズ(小数点)",
+    kakutei_chakujun: "確定着順",
+    kakutei_chakujun_num: "確定着順(整数)",
+    tansho_haraimodoshi: "単勝払戻",
+    fukusho_haraimodoshi: "複勝払戻",
+    ijo_kubun_code1: "異常区分コード1",
+    ijo_kubun_code1_label: "異常区分コード1(ラベル)",
+    ijo_kubun_code2: "異常区分コード2",
+    ijo_kubun_code2_label: "異常区分コード2(ラベル)",
+    nyusen_juni: "入線順位",
+    nyusen_juni_num: "入線順位(整数)",
+    record_flag: "レコードフラグ",
+    record_flag_label: "レコードフラグ(ラベル)",
+    soha_time: "走破タイム",
+    soha_time_float: "走破タイム(秒換算)",
+    soha_time_label: "走破タイム(xx分xx.x秒)",
+    chakusa_code1: "着差コード1",
+    chakusa_code1_num: "着差コード1(整数)",
+    chakusa_code2: "着差コード2",
+    chakusa_code2_label: "着差コード2(ラベル)",
+    chakusa_label: "着差(ラベル)",
+    time_sa: "タイム差",
+    time_sa_float: "タイム差(小数点)",
+    zenhan_3f: "前半3F",
+    zenhan_3f_float: "前半3F(小数点)",
+    kohan_3f: "後半3F",
+    kohan_3f_float: "後半3F(小数点)",
+    corner1_juni: "1角順位",
+    corner1_juni_label: "1角順位(ラベル)",
+    corner2_juni: "2角順位",
+    corner2_juni_label: "2角順位(ラベル)",
+    corner3_juni: "3角順位",
+    corner3_juni_label: "3角順位(ラベル)",
+    corner4_juni: "4角順位",
+    corner4_juni_label: "4角順位(ラベル)",
+    corner4_ichidori: "4角位置取り",
+    corner4_ichidori_label: "4角位置取り(ラベル)",
+    created: "データ作成日時",
+    modified: "データ更新日時"
+  }
+}
+
+-- 共通テーブル式(CTE)で、`keibajo_code`カラム（KOL仕様）をJRA-VAN仕様に変換
+WITH
+  d2_with_converted_code AS (
+    SELECT
+      *,
+      CASE keibajo_code
+        WHEN '08' THEN '01' -- 札幌
+        WHEN '09' THEN '02' -- 函館
+        WHEN '06' THEN '03' -- 福島
+        WHEN '07' THEN '04' -- 新潟
+        WHEN '04' THEN '05' -- 東京
+        WHEN '05' THEN '06' -- 中山
+        WHEN '02' THEN '07' -- 中京
+        WHEN '00' THEN '08' -- 京都
+        WHEN '01' THEN '09' -- 阪神
+        WHEN '03' THEN '10' -- 小倉
+        ELSE NULL
+      END AS keibajo_code_jvd_from_kol
+    FROM
+      ${ref("kol_den2")}
+  )
+
+-- `kol_den2`と関連テーブルを結合し、出走馬情報を整形する
+SELECT
+  -- ID / コード
+  d2.race_code_uma_kol,
+  d2.kaisai_nengappi || d2.keibajo_code_jvd_from_kol || d2.kaisai_kaiji || d2.kaisai_nichiji || d2.race_num || d2.umaban AS race_code_uma_jvd,
+  SUBSTR(d2.race_code_uma_kol, 1, 16) AS race_code_kol,
+  d2.kaisai_nengappi || d2.keibajo_code_jvd_from_kol || d2.kaisai_kaiji || d2.kaisai_nichiji || d2.race_num AS race_code_jvd,
+  
+  -- レース / 競馬場
+  d2.keibajo_code_jvd_from_kol AS keibajo_code_jvd,
+  d2.keibajo_code AS keibajo_code_kol,
+  PARSE_DATETIME('%Y%m%d%H%M', d2.kaisai_nengappi || REPLACE(d2.hasso_jikoku, ':', '')) AS hasso_date,
+  d2.kaisai_kaiji AS kaiji,
+  d2.kaisai_nichiji AS nichiji,
+  d2.race_num AS race_bango,
+  SAFE_CAST(d2.race_num AS INT64) AS race_bango_num,
+  d2.wakuban,
+  d2.umaban,
+  SAFE_CAST(d2.umaban AS INT64) AS umaban_num,
+
+  -- 馬
+  d2.bamei,
+  d2.ketto_toroku_bango AS ketto_toroku_bango_kol,
+  d2.seibetsu_code,
+  CASE d2.seibetsu_code WHEN '1' THEN '牡' WHEN '2' THEN '牝' WHEN '3' THEN 'せん' ELSE NULL END AS seibetsu_code_label,
+  d2.barei,
+  SAFE_CAST(d2.barei AS INT64) AS barei_num,
+  d2.futan_juryo,
+  SAFE_CAST(d2.futan_juryo AS FLOAT64) / 10 AS futan_juryo_float,
+  d2.blinker_shiyo_kubun,
+  CASE d2.blinker_shiyo_kubun WHEN '1' THEN 'はい' ELSE 'いいえ' END AS blinker_shiyo_kubun_label,
+  d2.rating,
+  SAFE_CAST(d2.rating AS FLOAT64) / 10 AS rating_float,
+  d2.banushimei,
+  d2.banushimei_ryakusho,
+  k.ketto1_f_hanshoku_toroku_bango,
+  k.ketto1_f_bamei,
+  k.ketto2_m_hanshoku_toroku_bango,
+  k.ketto2_m_bamei,
+  k.ketto5_mf_hanshoku_toroku_bango,
+  k.ketto5_mf_bamei,
+  d2.kyuyo_riyu,
+  
+  -- 騎手
+  d2.kishu_code,
+  d2.kishumei,
+  d2.kishumei_ryakusho,
+  d2.kishu_tozai_shozoku_code,
+  CASE d2.kishu_tozai_shozoku_code WHEN '1' THEN '西' WHEN '2' THEN '東' WHEN '3' THEN '招待' ELSE NULL END AS kishu_tozai_shozoku_code_label,
+  d2.kishu_minarai_code,
+  CASE d2.kishu_minarai_code WHEN '1' THEN '1kg減' WHEN '2' THEN '2kg減' WHEN '3' THEN '3kg減' WHEN '4' THEN '4kg減' WHEN '5' THEN '女性2kg減' ELSE NULL END AS kishu_minarai_code_label,
+  d2.kishu_norikawari_kubun,
+  CASE d2.kishu_norikawari_kubun WHEN '1' THEN 'はい' ELSE 'いいえ' END AS kishu_norikawari_kubun_label,
+  d2.kishu_shozokubasho_code,
+  CASE d2.kishu_shozokubasho_code WHEN '001' THEN '栗東' WHEN '002' THEN '美浦南' WHEN '003' THEN '美浦北' ELSE NULL END AS kishu_shozokubasho_code_label,
+  d2.kishu_shozoku_chokyoshi_code,
+  
+  -- 調教師
+  d2.chokyoshi_code,
+  d2.chokyoshimei,
+  d2.chokyoshimei_ryakusho,
+  d2.chokyoshi_shozokubasho_code,
+  CASE d2.chokyoshi_shozokubasho_code WHEN '001' THEN '栗東' WHEN '002' THEN '美浦南' WHEN '003' THEN '美浦北' ELSE NULL END AS chokyoshi_shozokubasho_code_label,
+  d2.chokyoshi_tracen_kubun,
+  CASE d2.chokyoshi_tracen_kubun WHEN '1' THEN '栗東' WHEN '2' THEN '美浦南' WHEN '3' THEN '美浦北' ELSE NULL END AS chokyoshi_tracen_kubun_label,
+
+  -- スピード指数
+  d2.speed_shisu1 AS speed_sisu_last_1,
+  SAFE_CAST(d2.speed_shisu1 AS FLOAT64) / 10 AS speed_sisu_last_1_float,
+  d2.speed_shisu2 AS speed_sisu_last_2,
+  SAFE_CAST(d2.speed_shisu2 AS FLOAT64) / 10 AS speed_sisu_last_2_float,
+  d2.speed_shisu3 AS speed_sisu_last_3,
+  SAFE_CAST(d2.speed_shisu3 AS FLOAT64) / 10 AS speed_sisu_last_3_float,
+  d2.speed_shisu4 AS speed_sisu_last_4,
+  SAFE_CAST(d2.speed_shisu4 AS FLOAT64) / 10 AS speed_sisu_last_4_float,
+  d2.speed_shisu5 AS speed_sisu_last_5,
+  SAFE_CAST(d2.speed_shisu5 AS FLOAT64) / 10 AS speed_sisu_last_5_float,
+
+  -- ローテーション
+  d2.rotation1,
+  SUBSTR(d2.rotation1, 1, 1) AS rotation1_label,
+  d2.rotation2,
+  SUBSTR(d2.rotation2, 1, 1) AS rotation2_label,
+  d2.rotation3,
+  SUBSTR(d2.rotation3, 1, 1) AS rotation3_label,
+  d2.rotation4,
+  SUBSTR(d2.rotation4, 1, 1) AS rotation4_label,
+  d2.rotation5,
+  SUBSTR(d2.rotation5, 1, 1) AS rotation5_label,
+  d2.rotation6,
+  SUBSTR(d2.rotation6, 1, 1) AS rotation6_label,
+  d2.rotation7,
+  SUBSTR(d2.rotation7, 1, 1) AS rotation7_label,
+  d2.rotation8,
+  SUBSTR(d2.rotation8, 1, 1) AS rotation8_label,
+  
+  -- 分析用フラグ
+  CASE WHEN r.toroku_tosu_num <= 8 THEN '中' WHEN d2.wakuban = '1' THEN '内枠' WHEN d2.wakuban = '8' THEN '外枠' ELSE '中' END AS waku_kubun,
+  CASE WHEN MOD(SAFE_CAST(d2.umaban AS INT64), 2) = 0 THEN 'はい' ELSE 'いいえ' END AS umaban_even,
+  CASE WHEN d2.chokyoshi_tracen_kubun = '1' AND d2.keibajo_code IN ('04', '05', '07', '06') THEN 'はい' ELSE 'いいえ' END AS ensei_kansai_to_kantou_flag,
+  CASE WHEN d2.chokyoshi_tracen_kubun IN ('2', '3') AND d2.keibajo_code IN ('00', '01', '03', '02') THEN 'はい' ELSE 'いいえ' END AS ensei_kantou_to_kansai_flag,
+  CASE WHEN (d2.chokyoshi_tracen_kubun = '1' AND d2.keibajo_code IN ('04', '05', '07', '06')) OR (d2.chokyoshi_tracen_kubun IN ('2', '3') AND d2.keibajo_code IN ('00', '01', '03', '02')) THEN 'はい' ELSE 'いいえ' END AS ensei_flag,
+
+  -- 成績
+  s2.record_shisu,
+  SAFE_CAST(s2.record_shisu AS INT64) AS record_shisu_num,
+  s2.bataiju,
+  CASE 
+    WHEN SAFE_CAST(s2.bataiju AS INT64) >= 500 THEN '500kg以上'
+    WHEN SAFE_CAST(s2.bataiju AS INT64) BETWEEN 480 AND 499 THEN '480～499kg'
+    WHEN SAFE_CAST(s2.bataiju AS INT64) BETWEEN 460 AND 479 THEN '460～479kg'
+    WHEN SAFE_CAST(s2.bataiju AS INT64) BETWEEN 440 AND 459 THEN '440～459kg'
+    WHEN SAFE_CAST(s2.bataiju AS INT64) < 440 THEN '439kg以下'
+    ELSE NULL
+  END AS bataiju_kubun,
+  s2.zogen_sa,
+  SAFE_CAST(s2.zogen_sa AS INT64) AS zogen_sa_num,
+  s2.tansho_ninkijun,
+  SAFE_CAST(s2.tansho_ninkijun AS INT64) AS tansho_ninkijun_num,
+  s2.tansho_odds,
+  SAFE_CAST(s2.tansho_odds AS FLOAT64) / 10 AS tansho_odds_float,
+  s2.kakutei_chakujun,
+  SAFE_CAST(s2.kakutei_chakujun AS INT64) AS kakutei_chakujun_num,
+  s2.nyusen_juni,
+  SAFE_CAST(s2.nyusen_juni AS INT64) AS nyusen_juni_num,
+  s2.ijo_kubun_code1,
+  CASE s2.ijo_kubun_code1 WHEN '1' THEN '落馬' WHEN '2' THEN '失格' WHEN '3' THEN '中止' WHEN '4' THEN '取消' WHEN '5' THEN '除外' WHEN '6' THEN '降着' WHEN '7' THEN '繰上げ' ELSE NULL END AS ijo_kubun_code1_label,
+  s2.ijo_kubun_code2,
+  CASE s2.ijo_kubun_code2 WHEN '01' THEN '出走取消' WHEN '02' THEN '出走除外' WHEN '03' THEN '競走除外' WHEN '04' THEN '競走中止' WHEN '05' THEN '放馬' WHEN '06' THEN '発走除外' ELSE NULL END AS ijo_kubun_code2_label,
+  s2.record_flag,
+  CASE s2.record_flag WHEN '1' THEN 'はい' ELSE 'いいえ' END AS record_flag_label,
+  s2.soha_time,
+  SAFE_CAST(SUBSTR(s2.soha_time, 1, 1) AS FLOAT64) * 60 + SAFE_CAST(SUBSTR(s2.soha_time, 2, 2) AS FLOAT64) + SAFE_CAST(SUBSTR(s2.soha_time, 4, 1) AS FLOAT64) / 10 AS soha_time_float,
+  SUBSTR(s2.soha_time, 1, 1) || '分' || SUBSTR(s2.soha_time, 2, 2) || '.' || SUBSTR(s2.soha_time, 4, 1) || '秒' AS soha_time_label,
+  s2.time_sa,
+  SAFE_CAST(s2.time_sa AS FLOAT64) / 10 AS time_sa_float,
+  s2.zenhan_3f,
+  SAFE_CAST(s2.zenhan_3f AS FLOAT64) / 10 AS zenhan_3f_float,
+  s2.kohan_3f,
+  SAFE_CAST(s2.kohan_3f AS FLOAT64) / 10 AS kohan_3f_float,
+  s2.chakusa_code1,
+  SAFE_CAST(s2.chakusa_code1 AS INT64) AS chakusa_code1_num,
+  s2.chakusa_code2,
+  CASE s2.chakusa_code2 
+    WHEN 'A' THEN 'ハナ' WHEN 'B' THEN 'アタマ' WHEN 'C' THEN 'クビ' 
+    WHEN 'D' THEN '1/2' WHEN 'E' THEN '3/4' WHEN 'F' THEN '1' 
+    WHEN 'G' THEN '1.1/4' WHEN 'H' THEN '1.1/2' WHEN 'I' THEN '1.3/4' 
+    WHEN 'J' THEN '2' WHEN 'K' THEN '2.1/2' WHEN 'L' THEN '3' 
+    WHEN 'M' THEN '3.1/2' WHEN 'N' THEN '4' WHEN 'O' THEN '5' 
+    WHEN 'P' THEN '6' WHEN 'Q' THEN '7' WHEN 'R' THEN '8' 
+    WHEN 'S' THEN '9' WHEN 'T' THEN '10' WHEN 'U' THEN '大差' 
+    ELSE NULL 
+  END AS chakusa_code2_label,
+  CASE WHEN s2.chakusa_code1 IS NOT NULL AND s2.chakusa_code1 != ' ' THEN s2.chakusa_code1 || '馬身' ELSE '' END ||
+  CASE s2.chakusa_code2 
+    WHEN 'A' THEN 'ハナ' WHEN 'B' THEN 'アタマ' WHEN 'C' THEN 'クビ' 
+    WHEN 'D' THEN '1/2' WHEN 'E' THEN '3/4' WHEN 'F' THEN '1' 
+    WHEN 'G' THEN '1.1/4' WHEN 'H' THEN '1.1/2' WHEN 'I' THEN '1.3/4' 
+    WHEN 'J' THEN '2' WHEN 'K' THEN '2.1/2' WHEN 'L' THEN '3' 
+    WHEN 'M' THEN '3.1/2' WHEN 'N' THEN '4' WHEN 'O' THEN '5' 
+    WHEN 'P' THEN '6' WHEN 'Q' THEN '7' WHEN 'R' THEN '8' 
+    WHEN 'S' THEN '9' WHEN 'T' THEN '10' WHEN 'U' THEN '大差' 
+    ELSE '' 
+  END AS chakusa_label,
+  s2.corner1_juni,
+  s2.corner2_juni,
+  s2.corner3_juni,
+  s2.corner4_juni,
+
+  -- 調教
+  s2.chokyo_honsu_course,
+  SAFE_CAST(s2.chokyo_honsu_course AS INT64) AS chokyo_honsu_course_num,
+  s2.chokyo_honsu_hanro,
+  SAFE_CAST(s2.chokyo_honsu_hanro AS INT64) AS chokyo_honsu_hanro_num,
+  s2.chokyo_honsu_pool,
+  SAFE_CAST(s2.chokyo_honsu_pool AS INT64) AS chokyo_honsu_pool_num,
+  s2.chokyo_flag,
+  CASE s2.chokyo_flag WHEN '1' THEN 'はい' ELSE 'いいえ' END AS chokyo_flag_label,
+  s2.chokyo_kijosha,
+  PARSE_DATE('%Y%m%d', s2.chokyo_nengappi) AS chokyo_date,
+  s2.chokyo_basho,
+  s2.chokyo_course,
+  s2.chokyo_babajotai,
+  s2.chokyo_8f,
+  s2.chokyo_7f,
+  s2.chokyo_6f,
+  s2.chokyo_5f,
+  s2.chokyo_4f,
+  s2.chokyo_3f,
+  s2.chokyo_1f,
+  s2.chokyo_ichidori,
+  s2.chokyo_asiiro,
+  s2.chokyo_yajirushi,
+  CASE s2.chokyo_yajirushi WHEN '1' THEN '一変(↑)' WHEN '2' THEN '平行(→)' WHEN '3' THEN '下降(↓)' WHEN '4' THEN '良化(／)' WHEN '5' THEN '下降気味(＼)' ELSE NULL END AS chokyo_yajirushi_label,
+  s2.chokyo_reigai,
+  s2.chokyo_awase,
+  CASE WHEN s2.chokyo_awase LIKE '%同入%' THEN '同入' WHEN s2.chokyo_awase LIKE '%遅れ%' THEN '遅れ' WHEN s2.chokyo_awase LIKE '%先着%' THEN '先着' ELSE NULL END AS chokyo_awase_kubun,
+  s2.chokyo_awase_flag,
+  CASE s2.chokyo_awase_flag WHEN '1' THEN '調教2の併せ' WHEN '2' THEN '調教3の併せ' ELSE NULL END AS chokyo_awase_flag_label,
+  s2.chokyo_tanpyo,
+
+  -- 払戻金
+  s1.tansho1_haraimodoshikin AS tansho_haraimodoshi,
+  s1.fukusho1_haraimodoshikin AS fukusho_haraimodoshi,
+
+  -- タイムスタンプ
+  CURRENT_TIMESTAMP() AS created,
+  CURRENT_TIMESTAMP() AS modified
+FROM
+  d2_with_converted_code AS d2
+LEFT JOIN
+  ${ref("kol_sei2")} AS s2 ON d2.race_code_uma_kol = s2.race_code_uma_kol
+LEFT JOIN
+  ${ref("kol_sei1")} AS s1 ON SUBSTR(d2.race_code_uma_kol, 1, 16) = s1.race_code_kol
+LEFT JOIN
+  ${ref("kol_ket")} AS k ON d2.ketto_toroku_bango = k.ketto_toroku_bango_kol
+LEFT JOIN
+  ${ref("race")} AS r ON SUBSTR(d2.race_code_uma_kol, 1, 16) = r.race_code_kol
