@@ -12,4 +12,23 @@ config {
   name: "kol_sei1"
 }
 
-// kol_den2, kol_sei2 など、他のソーステーブルも同様に宣言します。
+config {
+  type: "declaration",
+  database: "smartkeiba",
+  schema: "${vars.source_schema}",
+  name: "kol_den2"
+}
+
+config {
+  type: "declaration",
+  database: "smartkeiba",
+  schema: "${vars.source_schema}",
+  name: "kol_sei2"
+}
+
+config {
+  type: "declaration",
+  database: "smartkeiba",
+  schema: "${vars.source_schema}",
+  name: "kol_ket"
+}
