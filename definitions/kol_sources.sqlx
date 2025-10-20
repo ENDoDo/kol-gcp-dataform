@@ -1,0 +1,15 @@
+config {
+  type: "declaration",
+  database: "smartkeiba",
+  schema: "${vars.source_schema}", // dataform.jsonで定義したvars.source_schemaを参照
+  name: "kol_den1"
+}
+
+config {
+  type: "declaration",
+  database: "smartkeiba",
+  schema: "${vars.source_schema}",
+  name: "kol_sei1"
+}
+
+// kol_den2, kol_sei2 など、他のソーステーブルも同様に宣言します。
