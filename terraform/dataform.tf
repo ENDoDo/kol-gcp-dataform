@@ -87,7 +87,7 @@ resource "google_dataform_repository_release_config" "release_config" {
     default_database = var.project_id
     default_schema   = var.dataform_output_schema # 変数を参照
     vars = {
-      source_schema = "kol_keiba"
+      source_schema = "kolbi_keiba"
     }
   }
 }

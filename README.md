@@ -33,9 +33,9 @@ graph TD
     style G fill:#DAE8FC,stroke:#6C8EBF
 ```
 
-1.  **データ取り込み**: ユーザーがKOLデータを含むZIPファイルをGCSにアップロードすると、Cloud Functionが起動し、BigQueryの`kol_keiba`データセットに生データを書き込みます。
-2.  **データ変換**: DataformはGitHubリポジトリの`main`ブランチを監視します。毎日午前7時になると、スケジュールされたワークフローが起動し、`kol_keiba`の生データを参照して`kolbi_analysis.race`テーブルを生成・更新します。
-2.  **データ変換**: DataformはGitHubリポジトリの`main`ブランチを監視します。毎日午前7時になると、スケジュールされたワークフローが起動し、`kol_keiba`の生データを参照して`kolbi_analysis.race`テーブルを生成・更新します。
+1.  **データ取り込み**: ユーザーがKOLデータを含むZIPファイルをGCSにアップロードすると、Cloud Functionが起動し、BigQueryの`kolbi_keiba`データセットに生データを書き込みます。
+2.  **データ変換**: DataformはGitHubリポジトリの`main`ブランチを監視します。毎日午前7時になると、スケジュールされたワークフローが起動し、`kolbi_keiba`の生データを参照して`kolbi_analysis.race`テーブルを生成・更新します。
+2.  **データ変換**: DataformはGitHubリポジトリの`main`ブランチを監視します。毎日午前7時になると、スケジュールされたワークフローが起動し、`kolbi_keiba`の生データを参照して`kolbi_analysis.race`テーブルを生成・更新します。
 
 ## 技術スタック
 
@@ -114,7 +114,7 @@ terraform apply
 
 ## パイプラインの実行方法
 
-1.  **データ取り込み**: KOLデータを含む`.zip`ファイルを、Terraformが作成したGCSバケット (`kol-keiba-bucket`) にアップロードします。Cloud Functionが自動で起動し、BigQueryの`kol_keiba`データセットにデータが格納されます。
+1.  **データ取り込み**: KOLデータを含む`.zip`ファイルを、Terraformが作成したGCSバケット (`kol-keiba-bucket`) にアップロードします。Cloud Functionが自動で起動し、BigQueryの`kolbi_keiba`データセットにデータが格納されます。
 2.  **データ変換**: `terraform apply`で設定されたスケジュール (`毎日午前7時 JST`) になると、Dataformのワークフローが自動的に実行され、`kolbi_analysis.race`テーブルが更新されます。
 2.  **データ変換**: `terraform apply`で設定されたスケジュール (`毎日午前7時 JST`) になると、Dataformのワークフローが自動的に実行され、`kolbi_analysis.race`テーブルが更新されます。
 

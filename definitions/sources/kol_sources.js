@@ -1,6 +1,6 @@
 // definitions/sources/kol_sources.js
 
-// kol_keibaデータセット内の全てのソーステーブルをここで宣言します
+// kolbi_keiba
 declare({
   schema: "kolbi_keiba",
   name: "kol_den1"

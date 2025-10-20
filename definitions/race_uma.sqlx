@@ -7,8 +7,6 @@
 -- Dataform設定ブロック
 config {
   type: "table",
-  schema: "kolbi_analysis",
-  name: "race_uma",
   description: "KOLの出馬表(den2), 成績(sei1, sei2), 血統(ket), レース(race)データを結合し、出走馬に関する情報を整形したマスターテーブル。",
   columns: {
     race_code_uma_kol: "KOL仕様馬毎レースID",
