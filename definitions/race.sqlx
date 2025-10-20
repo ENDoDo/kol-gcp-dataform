@@ -7,7 +7,7 @@
 -- Dataform設定ブロック
 config {
   type: "table",
-  schema: "kol_analysis",
+  schema: "kolbi_analysis",
   name: "race",
   description: "KOLの出馬表データ(den1, sei1)を結合し、レースに関する情報を整形したマスターテーブル。",
   columns: {
