@@ -1,34 +1,32 @@
-config {
-  type: "declaration",
+// KODBのソーステーブルを宣言します。
+// dataform.jsonのvars.source_schemaで指定したデータセット名（kolbi_keiba）からテーブルを読み込みます。
+
+js_blocks.declare({
   database: "smartkeiba",
-  schema: "${vars.source_schema}", // dataform.jsonで定義したvars.source_schemaを参照
+  schema: vars.source_schema,
   name: "kol_den1"
-}
+});
 
-config {
-  type: "declaration",
+js_blocks.declare({
   database: "smartkeiba",
-  schema: "${vars.source_schema}",
-  name: "kol_sei1"
-}
-
-config {
-  type: "declaration",
-  database: "smartkeiba",
-  schema: "${vars.source_schema}",
+  schema: vars.source_schema,
   name: "kol_den2"
-}
+});
 
-config {
-  type: "declaration",
+js_blocks.declare({
   database: "smartkeiba",
-  schema: "${vars.source_schema}",
+  schema: vars.source_schema,
+  name: "kol_sei1"
+});
+
+js_blocks.declare({
+  database: "smartkeiba",
+  schema: vars.source_schema,
   name: "kol_sei2"
-}
+});
 
-config {
-  type: "declaration",
+js_blocks.declare({
   database: "smartkeiba",
-  schema: "${vars.source_schema}",
+  schema: vars.source_schema,
   name: "kol_ket"
-}
+});
