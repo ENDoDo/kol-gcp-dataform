@@ -20,3 +20,8 @@ declare({
   schema: "kolbi_keiba",
   name: "kol_sei2"
 });
+
+declare({
+  schema: "kolbi_keiba",
+  name: "kol_ket"
+});
