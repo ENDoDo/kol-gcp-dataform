@@ -1,31 +1,33 @@
+// definitions/sources.js
+
 // KODBのソーステーブルを宣言します。
 // dataform.jsonのvars.source_schemaで指定したデータセット名（kolbi_keiba）からテーブルを読み込みます。
 
-js_blocks.declare({
+declare({
   database: "smartkeiba",
   schema: vars.source_schema,
   name: "kol_den1"
 });
 
-js_blocks.declare({
+declare({
   database: "smartkeiba",
   schema: vars.source_schema,
   name: "kol_den2"
 });
 
-js_blocks.declare({
+declare({
   database: "smartkeiba",
   schema: vars.source_schema,
   name: "kol_sei1"
 });
 
-js_blocks.declare({
+declare({
   database: "smartkeiba",
   schema: vars.source_schema,
   name: "kol_sei2"
 });
 
-js_blocks.declare({
+declare({
   database: "smartkeiba",
   schema: vars.source_schema,
   name: "kol_ket"
