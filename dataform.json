@@ -1,9 +1,9 @@
 {
   "warehouse": "bigquery",
   "defaultDatabase": "smartkeiba",
-  "defaultSchema": "dataform_mart",
+  "defaultSchema": "kolbi_analysis",
   "defaultLocation": "asia-northeast1",
   "vars": {
-    "source_schema": "kol_keiba"
+    "source_schema": "kolbi_keiba"
   }
 }

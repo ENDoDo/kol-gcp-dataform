@@ -19,7 +19,7 @@ graph TD
     subgraph "データ取り込み (Ingestion)"
         A[1. ユーザーがZIPファイルをGCSにアップロード] --> B(GCS Bucket);
         B -- Eventarcトリガー --> C{Cloud Functions};
-        C -- データをパースしUpsert --> D["BigQuery Raw Tables<br>(kol_keiba.*)"];
+        C -- データをパースしUpsert --> D["BigQuery Raw Tables<br>(kolbi_keiba.*)"];
     end
 
     subgraph "データ変換 (Transformation)"
@@ -34,7 +34,7 @@ graph TD
 ```
 
 1.  **データ取り込み**: ユーザーがKOLデータを含むZIPファイルをGCSにアップロードすると、Cloud Functionが起動し、BigQueryの`kol_keiba`データセットに生データを書き込みます。
-2.  **データ変換**: DataformはGitHubリポジトリの`main`ブランチを監視します。毎日午前7時になると、スケジュールされたワークフローが起動し、`kol_keiba`の生データを参照して`kol_analysis.race`テーブルを生成・更新します。
+2.  **データ変換**: DataformはGitHubリポジトリの`main`ブランチを監視します。毎日午前7時になると、スケジュールされたワークフローが起動し、`kol_keiba`の生データを参照して`kolbi_analysis.race`テーブルを生成・更新します。
 2.  **データ変換**: DataformはGitHubリポジトリの`main`ブランチを監視します。毎日午前7時になると、スケジュールされたワークフローが起動し、`kol_keiba`の生データを参照して`kolbi_analysis.race`テーブルを生成・更新します。
 
 ## 技術スタック
@@ -115,7 +115,7 @@ terraform apply
 ## パイプラインの実行方法
 
 1.  **データ取り込み**: KOLデータを含む`.zip`ファイルを、Terraformが作成したGCSバケット (`kol-keiba-bucket`) にアップロードします。Cloud Functionが自動で起動し、BigQueryの`kol_keiba`データセットにデータが格納されます。
-2.  **データ変換**: `terraform apply`で設定されたスケジュール (`毎日午前7時 JST`) になると、Dataformのワークフローが自動的に実行され、`kol_analysis.race`テーブルが更新されます。
+2.  **データ変換**: `terraform apply`で設定されたスケジュール (`毎日午前7時 JST`) になると、Dataformのワークフローが自動的に実行され、`kolbi_analysis.race`テーブルが更新されます。
 2.  **データ変換**: `terraform apply`で設定されたスケジュール (`毎日午前7時 JST`) になると、Dataformのワークフローが自動的に実行され、`kolbi_analysis.race`テーブルが更新されます。
 
 ## クリーンアップ
