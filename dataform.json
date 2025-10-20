@@ -2,6 +2,7 @@
   "warehouse": "bigquery",
   "defaultDatabase": "smartkeiba",
   "defaultSchema": "kolbi_analysis",
+  "assertionSchema": "kolbi_keiba",
   "defaultLocation": "asia-northeast1",
   "vars": {
     "source_schema": "kolbi_keiba"
