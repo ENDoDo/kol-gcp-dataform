@@ -2,7 +2,7 @@
 
 このリポジトリは、GCP上に構築された競馬データパイプラインの**データ変換（Transformation）**部分を担います。
 
-GCSにアップロードされ、BigQueryの生テーブルに格納されたKOL競馬データをソースとして、**Dataform**を使い分析用のデータマート（`kol_analysis.race`）を構築します。
+GCSにアップロードされ、BigQueryの生テーブルに格納されたKOL競馬データをソースとして、**Dataform**を使い分析用のデータマート（`kolbi_analysis.race`）を構築します。
 
 このリポジトリでは、主に以下の2点をコードで管理しています。
 1.  **データ変換ロジック**: `dataform/`ディレクトリに格納された、`race`テーブルを生成するためのSQLXファイル。
@@ -25,7 +25,7 @@ graph TD
     subgraph "データ変換 (Transformation)"
         Git[GitHub<br>mainブランチ] -- コードソース --> E{Dataform Repository};
         E -- スケジュール実行 --> F{Dataform Workflow};
-        F -- 変換クエリ(race.sqlx)を実行 --> G["BigQuery Mart Table<br>(kol_analysis.race)"];
+        F -- 変換クエリ(race.sqlx)を実行 --> G["BigQuery Mart Table<br>(kolbi_analysis.race)"];
         D -- ソースとして参照 --> F;
     end
 
@@ -35,6 +35,7 @@ graph TD
 
 1.  **データ取り込み**: ユーザーがKOLデータを含むZIPファイルをGCSにアップロードすると、Cloud Functionが起動し、BigQueryの`kol_keiba`データセットに生データを書き込みます。
 2.  **データ変換**: DataformはGitHubリポジトリの`main`ブランチを監視します。毎日午前7時になると、スケジュールされたワークフローが起動し、`kol_keiba`の生データを参照して`kol_analysis.race`テーブルを生成・更新します。
+2.  **データ変換**: DataformはGitHubリポジトリの`main`ブランチを監視します。毎日午前7時になると、スケジュールされたワークフローが起動し、`kol_keiba`の生データを参照して`kolbi_analysis.race`テーブルを生成・更新します。
 
 ## 技術スタック
 
@@ -115,6 +116,7 @@ terraform apply
 
 1.  **データ取り込み**: KOLデータを含む`.zip`ファイルを、Terraformが作成したGCSバケット (`kol-keiba-bucket`) にアップロードします。Cloud Functionが自動で起動し、BigQueryの`kol_keiba`データセットにデータが格納されます。
 2.  **データ変換**: `terraform apply`で設定されたスケジュール (`毎日午前7時 JST`) になると、Dataformのワークフローが自動的に実行され、`kol_analysis.race`テーブルが更新されます。
+2.  **データ変換**: `terraform apply`で設定されたスケジュール (`毎日午前7時 JST`) になると、Dataformのワークフローが自動的に実行され、`kolbi_analysis.race`テーブルが更新されます。
 
 ## クリーンアップ
 
