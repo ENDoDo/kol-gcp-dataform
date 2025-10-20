@@ -86,6 +86,7 @@ resource "google_dataform_repository_release_config" "release_config" {
   code_compilation_config {
     default_database = var.project_id
     default_schema   = var.dataform_output_schema # 変数を参照
+    table_prefix     = "kolbi_keiba"              # ソーステーブルのスキーマを指定
     vars = {
       source_schema = "kolbi_keiba"
     }
