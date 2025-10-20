@@ -61,7 +61,7 @@ graph TD
 ├── dataform.json
 └── definitions/
     ├── sources/
-    │   └── kol_sources.js
+    │   └── sources.js
     └── race.sqlx
 ```
 
