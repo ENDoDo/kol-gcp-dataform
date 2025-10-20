@@ -83,14 +83,7 @@ resource "google_dataform_repository_release_config" "release_config" {
   name          = "production-release"
   git_commitish = "main"
 
-  code_compilation_config {
-    default_database = var.project_id
-    default_schema   = var.dataform_output_schema # 変数を参照
-    table_prefix     = "kolbi_keiba"              # ソーステーブルのスキーマを指定
-    vars = {
-      source_schema = "kolbi_keiba"
-    }
-  }
+  # code_compilation_configはdataform.jsonで定義するため、ここでは不要
 }
 
 # 3. ワークフロー設定
