@@ -5,6 +5,7 @@
   "assertionSchema": "kolbi_keiba",
   "defaultLocation": "asia-northeast1",
   "vars": {
-    "source_schema": "kolbi_keiba"
+    "source_schema": "kolbi_keiba",
+    "source_schema_stg": "kolbi_keiba_stg"
   }
 }

@@ -1,0 +1,6 @@
+config { type: "table" }
+
+SELECT
+  "${dataform.projectConfig.vars.source_schema}" as source_schema,
+  "${dataform.projectConfig.vars.source_schema_stg}" as source_schema_stg,
+  "${dataform.projectConfig.defaultSchema}" as defaultSchema
