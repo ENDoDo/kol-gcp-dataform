@@ -35,8 +35,14 @@ variable "dataform_workspace_id" {
 }
 
 # Dataformがテーブルを作成するBigQueryデータセット（スキーマ）。
-variable "dataform_output_schema" {
-  description = "The BigQuery schema (dataset) for Dataform to create tables in."
+variable "prd_schema" {
+  description = "The BigQuery schema for the production environment."
   type        = string
   default     = "kolbi_analysis"
+}
+
+variable "stg_schema" {
+  description = "The BigQuery schema for the staging environment."
+  type        = string
+  default     = "kolbi_analysis_stg"
 }

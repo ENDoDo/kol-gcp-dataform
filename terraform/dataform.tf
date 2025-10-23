@@ -2,6 +2,20 @@
 # Dataform Resources
 # -----------------------------------------------------------------------------
 
+# --- 動的命名のためのローカル変数 ---
+locals {
+  # prd環境ではsuffixを付けず、stg環境では "-stg" を付与する
+  env_suffix = terraform.workspace == "prd" ? "" : "-${terraform.workspace}"
+
+  # Dataformの出力先スキーマを環境によって切り替える
+  # prdの場合はvar.prd_schemaを、それ以外(stg)の場合はvar.stg_schemaを使用する
+  dataform_output_schema = terraform.workspace == "prd" ? var.prd_schema : var.stg_schema
+  
+  # Dataformのソーススキーマを環境によって切り替える
+  # prdの場合は "kolbi_keiba" を、それ以外(stg)の場合は "kolbi_keiba_stg" を使用する
+  dataform_source_schema = terraform.workspace == "prd" ? "kolbi_keiba" : "kolbi_keiba_stg"
+}
+
 # --- API Services ---
 resource "google_project_service" "secretmanager" {
   project            = var.project_id
@@ -15,11 +29,19 @@ resource "google_project_service" "dataform" {
   disable_on_destroy = false
 }
 
+# --- BigQuery Dataset for Dataform Output ---
+resource "google_bigquery_dataset" "dataform_output" {
+  dataset_id  = local.dataform_output_schema
+  project     = var.project_id
+  location    = var.region
+  description = "Dataset for Dataform output (${terraform.workspace} environment)"
+}
+
 # --- Service Account for Dataform Runner ---
 # DataformがBigQueryなどのGCPリソースにアクセスするためのサービスアカウント。
 resource "google_service_account" "dataform" {
-  account_id   = "dataform-runner"
-  display_name = "Dataform Runner Service Account"
+  account_id   = "dataform-runner${local.env_suffix}"
+  display_name = "Dataform Runner Service Account${local.env_suffix}"
   project      = var.project_id
 }
 
@@ -39,7 +61,7 @@ resource "google_project_iam_member" "dataform_bigquery_job_user" {
 # --- Git Authentication Secret ---
 resource "google_secret_manager_secret" "dataform_git_token" {
   provider  = google-beta.beta
-  secret_id = "${var.dataform_repository_id}-git-token"
+  secret_id = "${var.dataform_repository_id}-git-token${local.env_suffix}"
   replication {
     auto {}
   }
@@ -60,7 +82,7 @@ resource "google_dataform_repository" "repository" {
   provider = google-beta.beta
   project  = var.project_id
   region   = var.region
-  name     = var.dataform_repository_id
+  name     = "${var.dataform_repository_id}${local.env_suffix}"
 
   git_remote_settings {
     url                               = "https://github.com/ENDoDo/kol-gcp-dataform.git"
@@ -80,14 +102,14 @@ resource "google_dataform_repository_release_config" "release_config" {
   project    = google_dataform_repository.repository.project
   region     = google_dataform_repository.repository.region
   repository = google_dataform_repository.repository.name
-  name          = "production-release"
+  name          = "production-release${local.env_suffix}"
   git_commitish = "main"
 
   code_compilation_config {
     default_database = var.project_id
-    default_schema   = var.dataform_output_schema # 変数を参照
+    default_schema   = local.dataform_output_schema
     vars = {
-      source_schema = "kolbi_keiba"
+      source_schema = local.dataform_source_schema
     }
   }
 }
@@ -98,13 +120,13 @@ resource "google_dataform_repository_workflow_config" "workflow" {
   project    = google_dataform_repository.repository.project
   region     = google_dataform_repository.repository.region
   repository = google_dataform_repository.repository.name
-  name           = "daily-race-table-update"
+  name           = "daily-race-table-update${local.env_suffix}"
   release_config = google_dataform_repository_release_config.release_config.id
 
   invocation_config {
     included_targets {
       database = var.project_id
-      schema   = var.dataform_output_schema # 変数を参照
+      schema   = local.dataform_output_schema
       name     = "race"
     }
     service_account = google_service_account.dataform.email
