@@ -195,8 +195,8 @@ WITH
       r.hasso_date, -- raceテーブルからhasso_dateを取得
       d2.wakuban, d2.bamei, d2.seibetsu_code, d2.barei, d2.futan_juryo, d2.blinker_shiyo_kubun, d2.rating, d2.banushimei, d2.banushimei_ryakusho,
       d2.kyuyo_riyu, d2.kishu_code, d2.kishumei, d2.kishumei_ryakusho, d2.kishu_tozai_shozoku_code, d2.kishu_minarai_code, d2.kishu_norikawari_kubun,
-      d2.kishu_shozokubasho_code, d2.kishu_shozoku_chokyoshi_code, d2.chokyoshi_code, d2.chokyoshimei, d2.chokyoshimei_ryakusho,
-      d2.chokyoshi_shozokubasho_code, d2.chokyoshi_tracen_kubun, d2.keibajo_code, d2.chokyo_ashiiro,
+      d2.kishu_shozokubasho_code, d2.kishu_shozoku_chokyoshi_code, d2.chokyoshi_code, d2.chokyoshimei, d2.chokyoshimei_ryakusho, d2.chokyoshi_shozokubasho_code,
+      d2.chokyoshi_tracen_kubun, d2.keibajo_code,
       d2.speed_shisu1, d2.speed_shisu2, d2.speed_shisu3, d2.speed_shisu4, d2.speed_shisu5,
       d2.rotation1, d2.rotation2, d2.rotation3, d2.rotation4, d2.rotation5, d2.rotation6, d2.rotation7, d2.rotation8,
       s2.record_shisu, s2.bataiju, s2.zogen_sa, s2.tansho_ninkijun, s2.tansho_odds, s2.kakutei_chakujun,
