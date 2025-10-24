@@ -205,21 +205,21 @@ WITH
       s2.corner1_juni, s2.corner2_juni, s2.corner3_juni, s2.corner4_juni, s2.corner4_ichidori,
       s2.chokyo_flag, s2.chokyo_kijosha, s2.chokyo_nengappi, s2.chokyo_basho, s2.chokyo_course, s2.chokyo_babajotai,
       s2.chokyo_8f, s2.chokyo_7f, s2.chokyo_6f, s2.chokyo_5f, s2.chokyo_4f, s2.chokyo_3f, s2.chokyo_1f, s2.chokyo_ichidori,
-      s2.chokyo_ashiiro, s2.chokyo_yajirushi, s2.chokyo_reigai, s2.chokyo_awase2 AS chokyo_awase, s2.chokyo_awase_flag, s2.chokyo_tanpyo, s2.chokyo_honsu_course, s2.chokyo_honsu_hanro, s2.chokyo_honsu_pool,
+      s2.chokyo_ashiiro, s2.chokyo_yajirushi, s2.chokyo_reigai, d2.chokyo_awase, d2.chokyo_awase_flag, d2.chokyo_tanpyo, d2.chokyo_honsu_course, d2.chokyo_honsu_hanro, d2.chokyo_honsu_pool,
       k.ketto1_f_hanshoku_toroku_bango, k.ketto1_f_bamei, k.ketto2_m_hanshoku_toroku_bango, k.ketto2_m_bamei,
       k.ketto5_mf_hanshoku_toroku_bango, k.ketto5_mf_bamei,
       r.kyori, r.kyori_kubun, r.track_code1_dirtsiba_label, r.toroku_tosu_num,
       s1.tansho1_haraimodoshikin, s1.fukusho1_haraimodoshikin
     FROM
-      ${ref("kol_den2")} AS d2
+      `smartkeiba.kolbi_keiba_stg.kol_den2` AS d2
     LEFT JOIN
-      ${ref("kol_sei2")} AS s2 ON d2.race_code_uma_kol = s2.race_code_uma_kol
+      `smartkeiba.kolbi_keiba_stg.kol_sei2` AS s2 ON d2.race_code_uma_kol = s2.race_code_uma_kol
     LEFT JOIN
-      ${ref("kol_sei1")} AS s1 ON SUBSTR(d2.race_code_uma_kol, 1, 16) = s1.race_code_kol
+      `smartkeiba.kolbi_keiba_stg.kol_sei1` AS s1 ON SUBSTR(d2.race_code_uma_kol, 1, 16) = s1.race_code_kol
     LEFT JOIN
-      ${ref("kol_ket")} AS k ON d2.ketto_toroku_bango = k.ketto_toroku_bango_kol
+      `smartkeiba.kolbi_keiba_stg.kol_ket` AS k ON d2.ketto_toroku_bango = k.ketto_toroku_bango_kol
     LEFT JOIN
-      ${ref("race")} AS r ON SUBSTR(d2.race_code_uma_kol, 1, 16) = r.race_code_kol
+      `smartkeiba.kolbi_analysis_stg.race` AS r ON SUBSTR(d2.race_code_uma_kol, 1, 16) = r.race_code_kol
   ),
 
 -- CTE Step2: ウィンドウ関数を使い、馬ごとに1つ前のレース情報を取得
@@ -244,16 +244,16 @@ SELECT
   z.keibajo_code_jvd_from_kol AS keibajo_code_jvd,
   z.keibajo_code AS keibajo_code_kol,
   z.hasso_date,
-  z.kaiji,
-  z.nichiji,
+  z.kaisai_kaiji AS kaiji,
+  z.kaisai_kaiji AS nichiji,
+  z.wakuban,
   z.race_num AS race_bango,
   SAFE_CAST(z.race_num AS INT64) AS race_bango_num,
-  CASE WHEN z.toroku_tosu_num <= 8 THEN '中' WHEN z.wakuban = '1' THEN '内枠' WHEN z.wakuban = '8' THEN '外枠' ELSE '中' END AS waku_kubun,
-  z.wakuban,
   z.umaban,
   SAFE_CAST(z.umaban AS INT64) AS umaban_num,
-  CASE WHEN MOD(SAFE_CAST(z.umaban AS INT64), 2) = 0 THEN 'はい' ELSE 'いいえ' END AS umaban_even,
   z.bamei,
+  z.rating,
+  SAFE_CAST(z.rating AS FLOAT64) / 10 AS rating_float,
   z.seibetsu_code,
   CASE z.seibetsu_code WHEN '1' THEN '牡' WHEN '2' THEN '牝' WHEN '3' THEN 'せん' ELSE NULL END AS seibetsu_code_label,
   z.barei,
@@ -262,8 +262,7 @@ SELECT
   SAFE_CAST(z.futan_juryo AS FLOAT64) / 10 AS futan_juryo_float,
   z.blinker_shiyo_kubun,
   CASE z.blinker_shiyo_kubun WHEN '1' THEN 'はい' ELSE 'いいえ' END AS blinker_shiyo_kubun_label,
-  z.rating,
-  SAFE_CAST(z.rating AS FLOAT64) / 10 AS rating_float,
+  z.kyuyo_riyu,
   z.banushimei,
   z.banushimei_ryakusho,
   z.ketto_toroku_bango AS ketto_toroku_bango_kol,
@@ -273,19 +272,18 @@ SELECT
   z.ketto2_m_bamei,
   z.ketto5_mf_hanshoku_toroku_bango,
   z.ketto5_mf_bamei,
-  z.kyuyo_riyu,
+  z.kishu_code,
   z.kishumei,
   z.kishumei_ryakusho,
-  z.kishu_code,
   z.kishu_tozai_shozoku_code,
   CASE z.kishu_tozai_shozoku_code WHEN '1' THEN '西' WHEN '2' THEN '東' WHEN '3' THEN '招待' ELSE NULL END AS kishu_tozai_shozoku_code_label,
   z.kishu_minarai_code,
   CASE z.kishu_minarai_code WHEN '1' THEN '1kg減' WHEN '2' THEN '2kg減' WHEN '3' THEN '3kg減' WHEN '4' THEN '4kg減' WHEN '5' THEN '女性2kg減' ELSE NULL END AS kishu_minarai_code_label,
-  z.kishu_norikawari_kubun,
-  CASE z.kishu_norikawari_kubun WHEN '1' THEN 'はい' ELSE 'いいえ' END AS kishu_norikawari_kubun_label,
   z.kishu_shozokubasho_code,
   CASE z.kishu_shozokubasho_code WHEN '001' THEN '栗東' WHEN '002' THEN '美浦南' WHEN '003' THEN '美浦北' ELSE NULL END AS kishu_shozokubasho_code_label,
   z.kishu_shozoku_chokyoshi_code,
+  z.kishu_norikawari_kubun,
+  CASE z.kishu_norikawari_kubun WHEN '1' THEN 'はい' ELSE 'いいえ' END AS kishu_norikawari_kubun_label,
   z.chokyoshi_code,
   z.chokyoshimei,
   z.chokyoshimei_ryakusho,
@@ -296,7 +294,7 @@ SELECT
   z.chokyo_flag,
   CASE z.chokyo_flag WHEN '1' THEN 'はい' ELSE 'いいえ' END AS chokyo_flag_label,
   z.chokyo_kijosha,
-  PARSE_DATE('%Y%m%d', z.chokyo_nengappi) AS chokyo_date,
+  SAFE.PARSE_DATE('%Y%m%d', z.chokyo_nengappi) AS chokyo_date,
   z.chokyo_basho,
   z.chokyo_course,
   z.chokyo_babajotai,
@@ -349,6 +347,7 @@ SELECT
   SUBSTR(z.rotation7, 1, 1) AS rotation7_label,
   z.rotation8,
   SUBSTR(z.rotation8, 1, 1) AS rotation8_label,
+  CASE WHEN z.toroku_tosu_num <= 8 THEN '中' WHEN z.wakuban = '1' THEN '内枠' WHEN z.wakuban = '8' THEN '外枠' ELSE '中' END AS waku_kubun,
   z.bataiju,
   CASE 
     WHEN SAFE_CAST(z.bataiju AS INT64) >= 500 THEN '500kg以上'
@@ -367,6 +366,7 @@ SELECT
     WHEN SAFE_CAST(z.bataiju_zensou AS INT64) < 440 THEN '439kg以下'
     ELSE NULL
   END AS bataiju_kubun_zensou,
+  CASE WHEN MOD(SAFE_CAST(z.umaban AS INT64), 2) = 0 THEN 'はい' ELSE 'いいえ' END AS umaban_even,
   z.kyori_kubun_zensou,
   CASE WHEN z.kyori > z.kyori_zensou THEN 'はい' ELSE 'いいえ' END AS kyori_extension_flag,
   CASE WHEN z.kyori < z.kyori_zensou THEN 'はい' ELSE 'いいえ' END AS kyori_shortening_flag,
@@ -397,8 +397,8 @@ SELECT
   z.record_flag,
   CASE z.record_flag WHEN '1' THEN 'はい' ELSE 'いいえ' END AS record_flag_label,
   z.soha_time,
-  SAFE_CAST(SUBSTR(z.soha_time, 1, 1) AS FLOAT64) * 60 + SAFE_CAST(SUBSTR(z.soha_time, 2, 2) AS FLOAT64) + SAFE_CAST(SUBSTR(z.soha_time, 4, 1) AS FLOAT64) / 10 AS soha_time_float,
   SUBSTR(z.soha_time, 1, 1) || '分' || SUBSTR(z.soha_time, 2, 2) || '.' || SUBSTR(z.soha_time, 4, 1) || '秒' AS soha_time_label,
+  SAFE_CAST(SUBSTR(z.soha_time, 1, 1) AS FLOAT64) * 60 + SAFE_CAST(SUBSTR(z.soha_time, 2, 2) AS FLOAT64) + SAFE_CAST(SUBSTR(z.soha_time, 4, 1) AS FLOAT64) / 10 AS soha_time_float,
   z.chakusa_code1,
   SAFE_CAST(z.chakusa_code1 AS INT64) AS chakusa_code1_num,
   z.chakusa_code2,
