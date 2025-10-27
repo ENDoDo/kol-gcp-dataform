@@ -134,6 +134,11 @@ resource "google_dataform_repository_workflow_config" "workflow" {
       schema   = local.dataform_output_schema
       name     = "race_uma"
     }
+    included_targets {
+      database = var.project_id
+      schema   = local.dataform_output_schema
+      name     = "race_uma_chokyo"
+    }
     service_account = google_service_account.dataform.email
   }
 
