@@ -79,513 +79,511 @@ WITH
     FROM
       ${ref("kol_den2")}
   )
-(
-  SELECT
-    -- Step2: 調教データ1 (chokyo1) を縦持ちレコードとして抽出
-    -- 主キーと外部キー
-    den2.race_code_uma_kol || '1' AS race_code_uma_chokyodatakubun_kol,
-    den2.race_code_uma_kol AS race_code_uma_kol,
-    -- JRA-VAN仕様 馬毎レースID
+SELECT
+  -- Step2: 調教データ1 (chokyo1) を縦持ちレコードとして抽出
+  -- 主キーと外部キー
+  den2.race_code_uma_kol || '1' AS race_code_uma_chokyodatakubun_kol,
+  den2.race_code_uma_kol AS race_code_uma_kol,
+  -- JRA-VAN仕様 馬毎レースID
+  (
+    den2.kaisai_nengappi || den2.keibajo_code_jvd || den2.kaisai_kaiji || den2.kaisai_nichiji || den2.race_num || den2.umaban
+  ) AS race_code_uma_jvd,
+  -- KOL仕様 レースID (馬番なし14桁)
+  SUBSTR(den2.race_code_uma_kol, 1, 14) AS race_code_kol,
+  -- JRA-VAN仕様 レースID
+  (
+    den2.kaisai_nengappi || den2.keibajo_code_jvd || den2.kaisai_kaiji || den2.kaisai_nichiji || den2.race_num
+  ) AS race_code_jvd,
+  '1' AS chokyo_data_kubun,
+  den2.ketto_toroku_bango AS ketto_toroku_bango_kol,
+  den2.bamei AS bamei,
+  den2.data_sakusei_ymd AS data_sakusei_ymd,
+  SAFE.PARSE_DATE('%Y%m%d', den2.data_sakusei_ymd) AS data_sakusei_date,
+  -- 調教データ (chokyo1)
+  den2.chokyo1_flag AS chokyo_flag,
+  CASE
+    WHEN den2.chokyo1_flag = '1' THEN 'はい'
+    ELSE 'いいえ'
+  END AS chokyo_flag_label,
+  den2.chokyo1_kijosha AS chokyo_kijosha,
+  den2.chokyo1_nengappi AS chokyo_nengappi,
+  SAFE.PARSE_DATE('%Y%m%d', den2.chokyo1_nengappi) AS chokyo_nengappi_date,
+  den2.chokyo1_basho AS chokyo_basho,
+  den2.chokyo1_course AS chokyo_course,
+  den2.chokyo1_babajotai AS chokyo_babajotai,
+  -- hanro_pool_kaisu: 指示に基づき 坂路/プール の場合は chokyo1_6f をセット
+  CASE
+    WHEN den2.chokyo1_course = 'H' THEN den2.chokyo1_6f
+    WHEN den2.chokyo1_course = 'L' THEN den2.chokyo1_6f
+    ELSE NULL
+  END AS hanro_pool_kaisu,
+  -- chokyo_8f: 坂路/プール ('H', 'L') では NULL
+  CASE
+    WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
+    ELSE den2.chokyo1_8f
+  END AS chokyo_8f,
+  SAFE_CAST(
     (
-      den2.kaisai_nengappi || den2.keibajo_code_jvd || den2.kaisai_kaiji || den2.kaisai_nichiji || den2.race_num || den2.umaban
-    ) AS race_code_uma_jvd,
-    -- KOL仕様 レースID (馬番なし14桁)
-    SUBSTR(den2.race_code_uma_kol, 1, 14) AS race_code_kol,
-    -- JRA-VAN仕様 レースID
+      CASE
+        WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
+        ELSE den2.chokyo1_8f
+      END
+    ) AS FLOAT64
+  ) AS chokyo_8f_float,
+  -- chokyo_7f: 坂路/プール ('H', 'L') では NULL
+  CASE
+    WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
+    ELSE den2.chokyo1_7f
+  END AS chokyo_7f,
+  SAFE_CAST(
     (
-      den2.kaisai_nengappi || den2.keibajo_code_jvd || den2.kaisai_kaiji || den2.kaisai_nichiji || den2.race_num
-    ) AS race_code_jvd,
-    '1' AS chokyo_data_kubun,
-    den2.ketto_toroku_bango AS ketto_toroku_bango_kol,
-    den2.bamei AS bamei,
-    den2.data_sakusei_ymd AS data_sakusei_ymd,
-    SAFE.PARSE_DATE('%Y%m%d', den2.data_sakusei_ymd) AS data_sakusei_date,
-    -- 調教データ (chokyo1)
-    den2.chokyo1_flag AS chokyo_flag,
-    CASE
-      WHEN den2.chokyo1_flag = '1' THEN 'はい'
-      ELSE 'いいえ'
-    END AS chokyo_flag_label,
-    den2.chokyo1_kijosha AS chokyo_kijosha,
-    den2.chokyo1_nengappi AS chokyo_nengappi,
-    SAFE.PARSE_DATE('%Y%m%d', den2.chokyo1_nengappi) AS chokyo_nengappi_date,
-    den2.chokyo1_basho AS chokyo_basho,
-    den2.chokyo1_course AS chokyo_course,
-    den2.chokyo1_babajotai AS chokyo_babajotai,
-    -- hanro_pool_kaisu: 指示に基づき 坂路/プール の場合は chokyo1_6f をセット
-    CASE
-      WHEN den2.chokyo1_course = 'H' THEN den2.chokyo1_6f
-      WHEN den2.chokyo1_course = 'L' THEN den2.chokyo1_6f
-      ELSE NULL
-    END AS hanro_pool_kaisu,
-    -- chokyo_8f: 坂路/プール ('H', 'L') では NULL
-    CASE
-      WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
-      ELSE den2.chokyo1_8f
-    END AS chokyo_8f,
-    SAFE_CAST(
-      (
-        CASE
-          WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
-          ELSE den2.chokyo1_8f
-        END
-      ) AS FLOAT64
-    ) AS chokyo_8f_float,
-    -- chokyo_7f: 坂路/プール ('H', 'L') では NULL
-    CASE
-      WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
-      ELSE den2.chokyo1_7f
-    END AS chokyo_7f,
-    SAFE_CAST(
-      (
-        CASE
-          WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
-          ELSE den2.chokyo1_7f
-        END
-      ) AS FLOAT64
-    ) AS chokyo_7f_float,
-    -- chokyo_6f: 坂路/プール ('H', 'L') では NULL
-    CASE
-      WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
-      ELSE den2.chokyo1_6f
-    END AS chokyo_6f,
-    SAFE_CAST(
-      (
-        CASE
-          WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
-          ELSE den2.chokyo1_6f
-        END
-      ) AS FLOAT64
-    ) AS chokyo_6f_float,
-    -- chokyo_5f: 坂路/プール ('H', 'L') では NULL, それ以外は chokyo1_4f を使用 (指示通り)
-    CASE
-      WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
-      ELSE den2.chokyo1_4f
-    END AS chokyo_5f,
-    SAFE_CAST(
-      (
-        CASE
-          WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
-          ELSE den2.chokyo1_4f
-        END
-      ) AS FLOAT64
-    ) AS chokyo_5f_float,
-    -- chokyo_4f: 坂路 ('H') では chokyo1_5f, プール ('L') では NULL, それ以外は chokyo1_4f
-    CASE
-      WHEN den2.chokyo1_course = 'H' THEN den2.chokyo1_5f
-      WHEN den2.chokyo1_course = 'L' THEN NULL
-      ELSE den2.chokyo1_4f
-    END AS chokyo_4f,
-    SAFE_CAST(
-      (
-        CASE
-          WHEN den2.chokyo1_course = 'H' THEN den2.chokyo1_5f
-          WHEN den2.chokyo1_course = 'L' THEN NULL
-          ELSE den2.chokyo1_4f
-        END
-      ) AS FLOAT64
-    ) AS chokyo_4f_float,
-    -- chokyo_3f: 坂路 ('H') では chokyo1_4f, プール ('L') では NULL, それ以外は chokyo1_3f
-    CASE
-      WHEN den2.chokyo1_course = 'H' THEN den2.chokyo1_4f
-      WHEN den2.chokyo1_course = 'L' THEN NULL
-      ELSE den2.chokyo1_3f
-    END AS chokyo_3f,
-    SAFE_CAST(
-      (
-        CASE
-          WHEN den2.chokyo1_course = 'H' THEN den2.chokyo1_4f
-          WHEN den2.chokyo1_course = 'L' THEN NULL
-          ELSE den2.chokyo1_3f
-        END
-      ) AS FLOAT64
-    ) AS chokyo_3f_float,
-    -- chokyo_2f_float: 坂路 ('H') では chokyo1_3f, プール ('L') では NULL, それ以外は推定 (3F - (4F-3F))
-    CASE
-      WHEN den2.chokyo1_course = 'H' THEN SAFE_CAST(den2.chokyo1_3f AS FLOAT64)
-      WHEN den2.chokyo1_course = 'L' THEN NULL
-      ELSE (
-        2.0 * SAFE_CAST(den2.chokyo1_3f AS FLOAT64) - SAFE_CAST(den2.chokyo1_4f AS FLOAT64)
-      )
-    END AS chokyo_2f_float,
-    -- chokyo_1f: プール ('L') では NULL
-    CASE
-      WHEN den2.chokyo1_course = 'L' THEN NULL
-      ELSE den2.chokyo1_1f
-    END AS chokyo_1f,
-    CASE
-      WHEN den2.chokyo1_course = 'L' THEN NULL
-      ELSE SAFE_CAST(den2.chokyo1_1f AS FLOAT64)
-    END AS chokyo_1f_float,
-    den2.chokyo1_ichidori AS chokyo_ichidori,
-    CASE
-      den2.chokyo1_ichidori
-      WHEN '1' THEN '①'
-      WHEN '2' THEN '②'
-      WHEN '3' THEN '③'
-      WHEN '4' THEN '④'
-      WHEN '5' THEN '⑤'
-      WHEN '6' THEN '⑥'
-      WHEN '7' THEN '⑦'
-      WHEN '8' THEN '⑧'
-      WHEN '9' THEN '⑨'
-      ELSE NULL
-    END AS chokyo_ichidori_label,
-    den2.chokyo1_ashiiro AS chokyo_ashiiro,
-    den2.chokyo1_yajirushi AS chokyo_yajirushi,
-    CASE
-      den2.chokyo1_yajirushi
-      WHEN '1' THEN '↑'
-      WHEN '2' THEN '→'
-      WHEN '3' THEN '↓'
-      WHEN '4' THEN '／'
-      WHEN '5' THEN '＼'
-      ELSE NULL
-    END AS chokyo_yajirushi_label,
-    den2.chokyo1_reigai AS chokyo_reigai,
-    -- タイムスタンプ
-    den2.created AS created,
-    den2.modified AS modified
-  FROM
-    den2_with_jvd_code AS den2
-  WHERE
-    den2.chokyo1_nengappi IS NOT NULL
-    AND den2.chokyo1_nengappi != '' -- 調教1データが存在する場合のみ
-  UNION ALL
-  SELECT
-    -- Step3: 調教データ2 (chokyo2) を縦持ちレコードとして抽出
-    -- 主キーと外部キー
-    den2.race_code_uma_kol || '2' AS race_code_uma_chokyodatakubun_kol,
-    den2.race_code_uma_kol AS race_code_uma_kol,
+      CASE
+        WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
+        ELSE den2.chokyo1_7f
+      END
+    ) AS FLOAT64
+  ) AS chokyo_7f_float,
+  -- chokyo_6f: 坂路/プール ('H', 'L') では NULL
+  CASE
+    WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
+    ELSE den2.chokyo1_6f
+  END AS chokyo_6f,
+  SAFE_CAST(
     (
-      den2.kaisai_nengappi || den2.keibajo_code_jvd || den2.kaisai_kaiji || den2.kaisai_nichiji || den2.race_num || den2.umaban
-    ) AS race_code_uma_jvd,
-    SUBSTR(den2.race_code_uma_kol, 1, 14) AS race_code_kol,
+      CASE
+        WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
+        ELSE den2.chokyo1_6f
+      END
+    ) AS FLOAT64
+  ) AS chokyo_6f_float,
+  -- chokyo_5f: 坂路/プール ('H', 'L') では NULL, それ以外は chokyo1_4f を使用 (指示通り)
+  CASE
+    WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
+    ELSE den2.chokyo1_4f
+  END AS chokyo_5f,
+  SAFE_CAST(
     (
-      den2.kaisai_nengappi || den2.keibajo_code_jvd || den2.kaisai_kaiji || den2.kaisai_nichiji || den2.race_num
-    ) AS race_code_jvd,
-    '2' AS chokyo_data_kubun,
-    den2.ketto_toroku_bango AS ketto_toroku_bango_kol,
-    den2.bamei AS bamei,
-    den2.data_sakusei_ymd AS data_sakusei_ymd,
-    SAFE.PARSE_DATE('%Y%m%d', den2.data_sakusei_ymd) AS data_sakusei_date,
-    -- 調教データ (chokyo2)
-    den2.chokyo2_flag AS chokyo_flag,
-    CASE
-      WHEN den2.chokyo2_flag = '1' THEN 'はい'
-      ELSE 'いいえ'
-    END AS chokyo_flag_label,
-    den2.chokyo2_kijosha AS chokyo_kijosha,
-    den2.chokyo2_nengappi AS chokyo_nengappi,
-    SAFE.PARSE_DATE('%Y%m%d', den2.chokyo2_nengappi) AS chokyo_nengappi_date,
-    den2.chokyo2_basho AS chokyo_basho,
-    den2.chokyo2_course AS chokyo_course,
-    den2.chokyo2_babajotai AS chokyo_babajotai,
-    -- hanro_pool_kaisu
-    CASE
-      WHEN den2.chokyo2_course = 'H' THEN den2.chokyo2_6f
-      WHEN den2.chokyo2_course = 'L' THEN den2.chokyo2_6f
-      ELSE NULL
-    END AS hanro_pool_kaisu,
-    -- chokyo_8f
-    CASE
-      WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
-      ELSE den2.chokyo2_8f
-    END AS chokyo_8f,
-    SAFE_CAST(
-      (
-        CASE
-          WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
-          ELSE den2.chokyo2_8f
-        END
-      ) AS FLOAT64
-    ) AS chokyo_8f_float,
-    -- chokyo_7f
-    CASE
-      WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
-      ELSE den2.chokyo2_7f
-    END AS chokyo_7f,
-    SAFE_CAST(
-      (
-        CASE
-          WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
-          ELSE den2.chokyo2_7f
-        END
-      ) AS FLOAT64
-    ) AS chokyo_7f_float,
-    -- chokyo_6f
-    CASE
-      WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
-      ELSE den2.chokyo2_6f
-    END AS chokyo_6f,
-    SAFE_CAST(
-      (
-        CASE
-          WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
-          ELSE den2.chokyo2_6f
-        END
-      ) AS FLOAT64
-    ) AS chokyo_6f_float,
-    -- chokyo_5f
-    CASE
-      WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
-      ELSE den2.chokyo2_4f
-    END AS chokyo_5f,
-    SAFE_CAST(
-      (
-        CASE
-          WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
-          ELSE den2.chokyo2_4f
-        END
-      ) AS FLOAT64
-    ) AS chokyo_5f_float,
-    -- chokyo_4f
-    CASE
-      WHEN den2.chokyo2_course = 'H' THEN den2.chokyo2_5f
-      WHEN den2.chokyo2_course = 'L' THEN NULL
-      ELSE den2.chokyo2_4f
-    END AS chokyo_4f,
-    SAFE_CAST(
-      (
-        CASE
-          WHEN den2.chokyo2_course = 'H' THEN den2.chokyo2_5f
-          WHEN den2.chokyo2_course = 'L' THEN NULL
-          ELSE den2.chokyo2_4f
-        END
-      ) AS FLOAT64
-    ) AS chokyo_4f_float,
-    -- chokyo_3f
-    CASE
-      WHEN den2.chokyo2_course = 'H' THEN den2.chokyo2_4f
-      WHEN den2.chokyo2_course = 'L' THEN NULL
-      ELSE den2.chokyo2_3f
-    END AS chokyo_3f,
-    SAFE_CAST(
-      (
-        CASE
-          WHEN den2.chokyo2_course = 'H' THEN den2.chokyo2_4f
-          WHEN den2.chokyo2_course = 'L' THEN NULL
-          ELSE den2.chokyo2_3f
-        END
-      ) AS FLOAT64
-    ) AS chokyo_3f_float,
-    -- chokyo_2f_float
-    CASE
-      WHEN den2.chokyo2_course = 'H' THEN SAFE_CAST(den2.chokyo2_3f AS FLOAT64)
-      WHEN den2.chokyo2_course = 'L' THEN NULL
-      ELSE (
-        2.0 * SAFE_CAST(den2.chokyo2_3f AS FLOAT64) - SAFE_CAST(den2.chokyo2_4f AS FLOAT64)
-      )
-    END AS chokyo_2f_float,
-    -- chokyo_1f
-    CASE
-      WHEN den2.chokyo2_course = 'L' THEN NULL
-      ELSE den2.chokyo2_1f
-    END AS chokyo_1f,
-    CASE
-      WHEN den2.chokyo2_course = 'L' THEN NULL
-      ELSE SAFE_CAST(den2.chokyo2_1f AS FLOAT64)
-    END AS chokyo_1f_float,
-    den2.chokyo2_ichidori AS chokyo_ichidori,
-    CASE
-      den2.chokyo2_ichidori
-      WHEN '1' THEN '①'
-      WHEN '2' THEN '②'
-      WHEN '3' THEN '③'
-      WHEN '4' THEN '④'
-      WHEN '5' THEN '⑤'
-      WHEN '6' THEN '⑥'
-      WHEN '7' THEN '⑦'
-      WHEN '8' THEN '⑧'
-      WHEN '9' THEN '⑨'
-      ELSE NULL
-    END AS chokyo_ichidori_label,
-    den2.chokyo2_ashiiro AS chokyo_ashiiro,
-    den2.chokyo2_yajirushi AS chokyo_yajirushi,
-    CASE
-      den2.chokyo2_yajirushi
-      WHEN '1' THEN '↑'
-      WHEN '2' THEN '→'
-      WHEN '3' THEN '↓'
-      WHEN '4' THEN '／'
-      WHEN '5' THEN '＼'
-      ELSE NULL
-    END AS chokyo_yajirushi_label,
-    den2.chokyo2_reigai AS chokyo_reigai,
-    -- タイムスタンプ
-    den2.created AS created,
-    den2.modified AS modified
-  FROM
-    den2_with_jvd_code AS den2
-  WHERE
-    den2.chokyo2_nengappi IS NOT NULL
-    AND den2.chokyo2_nengappi != '' -- 調教2データが存在する場合のみ
-  UNION ALL
-  SELECT
-    -- Step4: 調教データ3 (chokyo3) を縦持ちレコードとして抽出
-    -- 主キーと外部キー
-    den2.race_code_uma_kol || '3' AS race_code_uma_chokyodatakubun_kol,
-    den2.race_code_uma_kol AS race_code_uma_kol,
+      CASE
+        WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
+        ELSE den2.chokyo1_4f
+      END
+    ) AS FLOAT64
+  ) AS chokyo_5f_float,
+  -- chokyo_4f: 坂路 ('H') では chokyo1_5f, プール ('L') では NULL, それ以外は chokyo1_4f
+  CASE
+    WHEN den2.chokyo1_course = 'H' THEN den2.chokyo1_5f
+    WHEN den2.chokyo1_course = 'L' THEN NULL
+    ELSE den2.chokyo1_4f
+  END AS chokyo_4f,
+  SAFE_CAST(
     (
-      den2.kaisai_nengappi || den2.keibajo_code_jvd || den2.kaisai_kaiji || den2.kaisai_nichiji || den2.race_num || den2.umaban
-    ) AS race_code_uma_jvd,
-    SUBSTR(den2.race_code_uma_kol, 1, 14) AS race_code_kol,
+      CASE
+        WHEN den2.chokyo1_course = 'H' THEN den2.chokyo1_5f
+        WHEN den2.chokyo1_course = 'L' THEN NULL
+        ELSE den2.chokyo1_4f
+      END
+    ) AS FLOAT64
+  ) AS chokyo_4f_float,
+  -- chokyo_3f: 坂路 ('H') では chokyo1_4f, プール ('L') では NULL, それ以外は chokyo1_3f
+  CASE
+    WHEN den2.chokyo1_course = 'H' THEN den2.chokyo1_4f
+    WHEN den2.chokyo1_course = 'L' THEN NULL
+    ELSE den2.chokyo1_3f
+  END AS chokyo_3f,
+  SAFE_CAST(
     (
-      den2.kaisai_nengappi || den2.keibajo_code_jvd || den2.kaisai_kaiji || den2.kaisai_nichiji || den2.race_num
-    ) AS race_code_jvd,
-    '3' AS chokyo_data_kubun,
-    den2.ketto_toroku_bango AS ketto_toroku_bango_kol,
-    den2.bamei AS bamei,
-    den2.data_sakusei_ymd AS data_sakusei_ymd,
-    SAFE.PARSE_DATE('%Y%m%d', den2.data_sakusei_ymd) AS data_sakusei_date,
-    -- 調教データ (chokyo3)
-    den2.chokyo3_flag AS chokyo_flag,
-    CASE
-      WHEN den2.chokyo3_flag = '1' THEN 'はい'
-      ELSE 'いいえ'
-    END AS chokyo_flag_label,
-    den2.chokyo3_kijosha AS chokyo_kijosha,
-    den2.chokyo3_nengappi AS chokyo_nengappi,
-    SAFE.PARSE_DATE('%Y%m%d', den2.chokyo3_nengappi) AS chokyo_nengappi_date,
-    den2.chokyo3_basho AS chokyo_basho,
-    den2.chokyo3_course AS chokyo_course,
-    den2.chokyo3_babajotai AS chokyo_babajotai,
-    -- hanro_pool_kaisu
-    CASE
-      WHEN den2.chokyo3_course = 'H' THEN den2.chokyo3_6f
-      WHEN den2.chokyo3_course = 'L' THEN den2.chokyo3_6f
-      ELSE NULL
-    END AS hanro_pool_kaisu,
-    -- chokyo_8f
-    CASE
-      WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
-      ELSE den2.chokyo3_8f
-    END AS chokyo_8f,
-    SAFE_CAST(
-      (
-        CASE
-          WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
-          ELSE den2.chokyo3_8f
-        END
-      ) AS FLOAT64
-    ) AS chokyo_8f_float,
-    -- chokyo_7f
-    CASE
-      WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
-      ELSE den2.chokyo3_7f
-    END AS chokyo_7f,
-    SAFE_CAST(
-      (
-        CASE
-          WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
-          ELSE den2.chokyo3_7f
-        END
-      ) AS FLOAT64
-    ) AS chokyo_7f_float,
-    -- chokyo_6f
-    CASE
-      WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
-      ELSE den2.chokyo3_6f
-    END AS chokyo_6f,
-    SAFE_CAST(
-      (
-        CASE
-          WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
-          ELSE den2.chokyo3_6f
-        END
-      ) AS FLOAT64
-    ) AS chokyo_6f_float,
-    -- chokyo_5f
-    CASE
-      WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
-      ELSE den2.chokyo3_4f
-    END AS chokyo_5f,
-    SAFE_CAST(
-      (
-        CASE
-          WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
-          ELSE den2.chokyo3_4f
-        END
-      ) AS FLOAT64
-    ) AS chokyo_5f_float,
-    -- chokyo_4f
-    CASE
-      WHEN den2.chokyo3_course = 'H' THEN den2.chokyo3_5f
-      WHEN den2.chokyo3_course = 'L' THEN NULL
-      ELSE den2.chokyo3_4f
-    END AS chokyo_4f,
-    SAFE_CAST(
-      (
-        CASE
-          WHEN den2.chokyo3_course = 'H' THEN den2.chokyo3_5f
-          WHEN den2.chokyo3_course = 'L' THEN NULL
-          ELSE den2.chokyo3_4f
-        END
-      ) AS FLOAT64
-    ) AS chokyo_4f_float,
-    -- chokyo_3f
-    CASE
-      WHEN den2.chokyo3_course = 'H' THEN den2.chokyo3_4f
-      WHEN den2.chokyo3_course = 'L' THEN NULL
-      ELSE den2.chokyo3_3f
-    END AS chokyo_3f,
-    SAFE_CAST(
-      (
-        CASE
-          WHEN den2.chokyo3_course = 'H' THEN den2.chokyo3_4f
-          WHEN den2.chokyo3_course = 'L' THEN NULL
-          ELSE den2.chokyo3_3f
-        END
-      ) AS FLOAT64
-    ) AS chokyo_3f_float,
-    -- chokyo_2f_float
-    CASE
-      WHEN den2.chokyo3_course = 'H' THEN SAFE_CAST(den2.chokyo3_3f AS FLOAT64)
-      WHEN den2.chokyo3_course = 'L' THEN NULL
-      ELSE (
-        2.0 * SAFE_CAST(den2.chokyo3_3f AS FLOAT64) - SAFE_CAST(den2.chokyo3_4f AS FLOAT64)
-      )
-    END AS chokyo_2f_float,
-    -- chokyo_1f
-    CASE
-      WHEN den2.chokyo3_course = 'L' THEN NULL
-      ELSE den2.chokyo3_1f
-    END AS chokyo_1f,
-    CASE
-      WHEN den2.chokyo3_course = 'L' THEN NULL
-      ELSE SAFE_CAST(den2.chokyo3_1f AS FLOAT64)
-    END AS chokyo_1f_float,
-    den2.chokyo3_ichidori AS chokyo_ichidori,
-    CASE
-      den2.chokyo3_ichidori
-      WHEN '1' THEN '①'
-      WHEN '2' THEN '②'
-      WHEN '3' THEN '③'
-      WHEN '4' THEN '④'
-      WHEN '5' THEN '⑤'
-      WHEN '6' THEN '⑥'
-      WHEN '7' THEN '⑦'
-      WHEN '8' THEN '⑧'
-      WHEN '9' THEN '⑨'
-      ELSE NULL
-    END AS chokyo_ichidori_label,
-    den2.chokyo3_ashiiro AS chokyo_ashiiro,
-    den2.chokyo3_yajirushi AS chokyo_yajirushi,
-    CASE
-      den2.chokyo3_yajirushi
-      WHEN '1' THEN '↑'
-      WHEN '2' THEN '→'
-      WHEN '3' THEN '↓'
-      WHEN '4' THEN '／'
-      WHEN '5' THEN '＼'
-      ELSE NULL
-    END AS chokyo_yajirushi_label,
-    den2.chokyo3_reigai AS chokyo_reigai,
-    -- タイムスタンプ
-    den2.created AS created,
-    den2.modified AS modified
-  FROM
-    den2_with_jvd_code AS den2
-  WHERE
-    den2.chokyo3_nengappi IS NOT NULL AND den2.chokyo3_nengappi != '' -- 調教3データが存在する場合のみ
-)
+      CASE
+        WHEN den2.chokyo1_course = 'H' THEN den2.chokyo1_4f
+        WHEN den2.chokyo1_course = 'L' THEN NULL
+        ELSE den2.chokyo1_3f
+      END
+    ) AS FLOAT64
+  ) AS chokyo_3f_float,
+  -- chokyo_2f_float: 坂路 ('H') では chokyo1_3f, プール ('L') では NULL, それ以外は推定 (3F - (4F-3F))
+  CASE
+    WHEN den2.chokyo1_course = 'H' THEN SAFE_CAST(den2.chokyo1_3f AS FLOAT64)
+    WHEN den2.chokyo1_course = 'L' THEN NULL
+    ELSE (
+      2.0 * SAFE_CAST(den2.chokyo1_3f AS FLOAT64) - SAFE_CAST(den2.chokyo1_4f AS FLOAT64)
+    )
+  END AS chokyo_2f_float,
+  -- chokyo_1f: プール ('L') では NULL
+  CASE
+    WHEN den2.chokyo1_course = 'L' THEN NULL
+    ELSE den2.chokyo1_1f
+  END AS chokyo_1f,
+  CASE
+    WHEN den2.chokyo1_course = 'L' THEN NULL
+    ELSE SAFE_CAST(den2.chokyo1_1f AS FLOAT64)
+  END AS chokyo_1f_float,
+  den2.chokyo1_ichidori AS chokyo_ichidori,
+  CASE
+    den2.chokyo1_ichidori
+    WHEN '1' THEN '①'
+    WHEN '2' THEN '②'
+    WHEN '3' THEN '③'
+    WHEN '4' THEN '④'
+    WHEN '5' THEN '⑤'
+    WHEN '6' THEN '⑥'
+    WHEN '7' THEN '⑦'
+    WHEN '8' THEN '⑧'
+    WHEN '9' THEN '⑨'
+    ELSE NULL
+  END AS chokyo_ichidori_label,
+  den2.chokyo1_ashiiro AS chokyo_ashiiro,
+  den2.chokyo1_yajirushi AS chokyo_yajirushi,
+  CASE
+    den2.chokyo1_yajirushi
+    WHEN '1' THEN '↑'
+    WHEN '2' THEN '→'
+    WHEN '3' THEN '↓'
+    WHEN '4' THEN '／'
+    WHEN '5' THEN '＼'
+    ELSE NULL
+  END AS chokyo_yajirushi_label,
+  den2.chokyo1_reigai AS chokyo_reigai,
+  -- タイムスタンプ
+  den2.created AS created,
+  den2.modified AS modified
+FROM
+  den2_with_jvd_code AS den2
+WHERE
+  den2.chokyo1_nengappi IS NOT NULL
+  AND den2.chokyo1_nengappi != '' -- 調教1データが存在する場合のみ
+UNION ALL
+SELECT
+  -- Step3: 調教データ2 (chokyo2) を縦持ちレコードとして抽出
+  -- 主キーと外部キー
+  den2.race_code_uma_kol || '2' AS race_code_uma_chokyodatakubun_kol,
+  den2.race_code_uma_kol AS race_code_uma_kol,
+  (
+    den2.kaisai_nengappi || den2.keibajo_code_jvd || den2.kaisai_kaiji || den2.kaisai_nichiji || den2.race_num || den2.umaban
+  ) AS race_code_uma_jvd,
+  SUBSTR(den2.race_code_uma_kol, 1, 14) AS race_code_kol,
+  (
+    den2.kaisai_nengappi || den2.keibajo_code_jvd || den2.kaisai_kaiji || den2.kaisai_nichiji || den2.race_num
+  ) AS race_code_jvd,
+  '2' AS chokyo_data_kubun,
+  den2.ketto_toroku_bango AS ketto_toroku_bango_kol,
+  den2.bamei AS bamei,
+  den2.data_sakusei_ymd AS data_sakusei_ymd,
+  SAFE.PARSE_DATE('%Y%m%d', den2.data_sakusei_ymd) AS data_sakusei_date,
+  -- 調教データ (chokyo2)
+  den2.chokyo2_flag AS chokyo_flag,
+  CASE
+    WHEN den2.chokyo2_flag = '1' THEN 'はい'
+    ELSE 'いいえ'
+  END AS chokyo_flag_label,
+  den2.chokyo2_kijosha AS chokyo_kijosha,
+  den2.chokyo2_nengappi AS chokyo_nengappi,
+  SAFE.PARSE_DATE('%Y%m%d', den2.chokyo2_nengappi) AS chokyo_nengappi_date,
+  den2.chokyo2_basho AS chokyo_basho,
+  den2.chokyo2_course AS chokyo_course,
+  den2.chokyo2_babajotai AS chokyo_babajotai,
+  -- hanro_pool_kaisu
+  CASE
+    WHEN den2.chokyo2_course = 'H' THEN den2.chokyo2_6f
+    WHEN den2.chokyo2_course = 'L' THEN den2.chokyo2_6f
+    ELSE NULL
+  END AS hanro_pool_kaisu,
+  -- chokyo_8f
+  CASE
+    WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
+    ELSE den2.chokyo2_8f
+  END AS chokyo_8f,
+  SAFE_CAST(
+    (
+      CASE
+        WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
+        ELSE den2.chokyo2_8f
+      END
+    ) AS FLOAT64
+  ) AS chokyo_8f_float,
+  -- chokyo_7f
+  CASE
+    WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
+    ELSE den2.chokyo2_7f
+  END AS chokyo_7f,
+  SAFE_CAST(
+    (
+      CASE
+        WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
+        ELSE den2.chokyo2_7f
+      END
+    ) AS FLOAT64
+  ) AS chokyo_7f_float,
+  -- chokyo_6f
+  CASE
+    WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
+    ELSE den2.chokyo2_6f
+  END AS chokyo_6f,
+  SAFE_CAST(
+    (
+      CASE
+        WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
+        ELSE den2.chokyo2_6f
+      END
+    ) AS FLOAT64
+  ) AS chokyo_6f_float,
+  -- chokyo_5f
+  CASE
+    WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
+    ELSE den2.chokyo2_4f
+  END AS chokyo_5f,
+  SAFE_CAST(
+    (
+      CASE
+        WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
+        ELSE den2.chokyo2_4f
+      END
+    ) AS FLOAT64
+  ) AS chokyo_5f_float,
+  -- chokyo_4f
+  CASE
+    WHEN den2.chokyo2_course = 'H' THEN den2.chokyo2_5f
+    WHEN den2.chokyo2_course = 'L' THEN NULL
+    ELSE den2.chokyo2_4f
+  END AS chokyo_4f,
+  SAFE_CAST(
+    (
+      CASE
+        WHEN den2.chokyo2_course = 'H' THEN den2.chokyo2_5f
+        WHEN den2.chokyo2_course = 'L' THEN NULL
+        ELSE den2.chokyo2_4f
+      END
+    ) AS FLOAT64
+  ) AS chokyo_4f_float,
+  -- chokyo_3f
+  CASE
+    WHEN den2.chokyo2_course = 'H' THEN den2.chokyo2_4f
+    WHEN den2.chokyo2_course = 'L' THEN NULL
+    ELSE den2.chokyo2_3f
+  END AS chokyo_3f,
+  SAFE_CAST(
+    (
+      CASE
+        WHEN den2.chokyo2_course = 'H' THEN den2.chokyo2_4f
+        WHEN den2.chokyo2_course = 'L' THEN NULL
+        ELSE den2.chokyo2_3f
+      END
+    ) AS FLOAT64
+  ) AS chokyo_3f_float,
+  -- chokyo_2f_float
+  CASE
+    WHEN den2.chokyo2_course = 'H' THEN SAFE_CAST(den2.chokyo2_3f AS FLOAT64)
+    WHEN den2.chokyo2_course = 'L' THEN NULL
+    ELSE (
+      2.0 * SAFE_CAST(den2.chokyo2_3f AS FLOAT64) - SAFE_CAST(den2.chokyo2_4f AS FLOAT64)
+    )
+  END AS chokyo_2f_float,
+  -- chokyo_1f
+  CASE
+    WHEN den2.chokyo2_course = 'L' THEN NULL
+    ELSE den2.chokyo2_1f
+  END AS chokyo_1f,
+  CASE
+    WHEN den2.chokyo2_course = 'L' THEN NULL
+    ELSE SAFE_CAST(den2.chokyo2_1f AS FLOAT64)
+  END AS chokyo_1f_float,
+  den2.chokyo2_ichidori AS chokyo_ichidori,
+  CASE
+    den2.chokyo2_ichidori
+    WHEN '1' THEN '①'
+    WHEN '2' THEN '②'
+    WHEN '3' THEN '③'
+    WHEN '4' THEN '④'
+    WHEN '5' THEN '⑤'
+    WHEN '6' THEN '⑥'
+    WHEN '7' THEN '⑦'
+    WHEN '8' THEN '⑧'
+    WHEN '9' THEN '⑨'
+    ELSE NULL
+  END AS chokyo_ichidori_label,
+  den2.chokyo2_ashiiro AS chokyo_ashiiro,
+  den2.chokyo2_yajirushi AS chokyo_yajirushi,
+  CASE
+    den2.chokyo2_yajirushi
+    WHEN '1' THEN '↑'
+    WHEN '2' THEN '→'
+    WHEN '3' THEN '↓'
+    WHEN '4' THEN '／'
+    WHEN '5' THEN '＼'
+    ELSE NULL
+  END AS chokyo_yajirushi_label,
+  den2.chokyo2_reigai AS chokyo_reigai,
+  -- タイムスタンプ
+  den2.created AS created,
+  den2.modified AS modified
+FROM
+  den2_with_jvd_code AS den2
+WHERE
+  den2.chokyo2_nengappi IS NOT NULL
+  AND den2.chokyo2_nengappi != '' -- 調教2データが存在する場合のみ
+UNION ALL
+SELECT
+  -- Step4: 調教データ3 (chokyo3) を縦持ちレコードとして抽出
+  -- 主キーと外部キー
+  den2.race_code_uma_kol || '3' AS race_code_uma_chokyodatakubun_kol,
+  den2.race_code_uma_kol AS race_code_uma_kol,
+  (
+    den2.kaisai_nengappi || den2.keibajo_code_jvd || den2.kaisai_kaiji || den2.kaisai_nichiji || den2.race_num || den2.umaban
+  ) AS race_code_uma_jvd,
+  SUBSTR(den2.race_code_uma_kol, 1, 14) AS race_code_kol,
+  (
+    den2.kaisai_nengappi || den2.keibajo_code_jvd || den2.kaisai_kaiji || den2.kaisai_nichiji || den2.race_num
+  ) AS race_code_jvd,
+  '3' AS chokyo_data_kubun,
+  den2.ketto_toroku_bango AS ketto_toroku_bango_kol,
+  den2.bamei AS bamei,
+  den2.data_sakusei_ymd AS data_sakusei_ymd,
+  SAFE.PARSE_DATE('%Y%m%d', den2.data_sakusei_ymd) AS data_sakusei_date,
+  -- 調教データ (chokyo3)
+  den2.chokyo3_flag AS chokyo_flag,
+  CASE
+    WHEN den2.chokyo3_flag = '1' THEN 'はい'
+    ELSE 'いいえ'
+  END AS chokyo_flag_label,
+  den2.chokyo3_kijosha AS chokyo_kijosha,
+  den2.chokyo3_nengappi AS chokyo_nengappi,
+  SAFE.PARSE_DATE('%Y%m%d', den2.chokyo3_nengappi) AS chokyo_nengappi_date,
+  den2.chokyo3_basho AS chokyo_basho,
+  den2.chokyo3_course AS chokyo_course,
+  den2.chokyo3_babajotai AS chokyo_babajotai,
+  -- hanro_pool_kaisu
+  CASE
+    WHEN den2.chokyo3_course = 'H' THEN den2.chokyo3_6f
+    WHEN den2.chokyo3_course = 'L' THEN den2.chokyo3_6f
+    ELSE NULL
+  END AS hanro_pool_kaisu,
+  -- chokyo_8f
+  CASE
+    WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
+    ELSE den2.chokyo3_8f
+  END AS chokyo_8f,
+  SAFE_CAST(
+    (
+      CASE
+        WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
+        ELSE den2.chokyo3_8f
+      END
+    ) AS FLOAT64
+  ) AS chokyo_8f_float,
+  -- chokyo_7f
+  CASE
+    WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
+    ELSE den2.chokyo3_7f
+  END AS chokyo_7f,
+  SAFE_CAST(
+    (
+      CASE
+        WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
+        ELSE den2.chokyo3_7f
+      END
+    ) AS FLOAT64
+  ) AS chokyo_7f_float,
+  -- chokyo_6f
+  CASE
+    WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
+    ELSE den2.chokyo3_6f
+  END AS chokyo_6f,
+  SAFE_CAST(
+    (
+      CASE
+        WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
+        ELSE den2.chokyo3_6f
+      END
+    ) AS FLOAT64
+  ) AS chokyo_6f_float,
+  -- chokyo_5f
+  CASE
+    WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
+    ELSE den2.chokyo3_4f
+  END AS chokyo_5f,
+  SAFE_CAST(
+    (
+      CASE
+        WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
+        ELSE den2.chokyo3_4f
+      END
+    ) AS FLOAT64
+  ) AS chokyo_5f_float,
+  -- chokyo_4f
+  CASE
+    WHEN den2.chokyo3_course = 'H' THEN den2.chokyo3_5f
+    WHEN den2.chokyo3_course = 'L' THEN NULL
+    ELSE den2.chokyo3_4f
+  END AS chokyo_4f,
+  SAFE_CAST(
+    (
+      CASE
+        WHEN den2.chokyo3_course = 'H' THEN den2.chokyo3_5f
+        WHEN den2.chokyo3_course = 'L' THEN NULL
+        ELSE den2.chokyo3_4f
+      END
+    ) AS FLOAT64
+  ) AS chokyo_4f_float,
+  -- chokyo_3f
+  CASE
+    WHEN den2.chokyo3_course = 'H' THEN den2.chokyo3_4f
+    WHEN den2.chokyo3_course = 'L' THEN NULL
+    ELSE den2.chokyo3_3f
+  END AS chokyo_3f,
+  SAFE_CAST(
+    (
+      CASE
+        WHEN den2.chokyo3_course = 'H' THEN den2.chokyo3_4f
+        WHEN den2.chokyo3_course = 'L' THEN NULL
+        ELSE den2.chokyo3_3f
+      END
+    ) AS FLOAT64
+  ) AS chokyo_3f_float,
+  -- chokyo_2f_float
+  CASE
+    WHEN den2.chokyo3_course = 'H' THEN SAFE_CAST(den2.chokyo3_3f AS FLOAT64)
+    WHEN den2.chokyo3_course = 'L' THEN NULL
+    ELSE (
+      2.0 * SAFE_CAST(den2.chokyo3_3f AS FLOAT64) - SAFE_CAST(den2.chokyo3_4f AS FLOAT64)
+    )
+  END AS chokyo_2f_float,
+  -- chokyo_1f
+  CASE
+    WHEN den2.chokyo3_course = 'L' THEN NULL
+    ELSE den2.chokyo3_1f
+  END AS chokyo_1f,
+  CASE
+    WHEN den2.chokyo3_course = 'L' THEN NULL
+    ELSE SAFE_CAST(den2.chokyo3_1f AS FLOAT64)
+  END AS chokyo_1f_float,
+  den2.chokyo3_ichidori AS chokyo_ichidori,
+  CASE
+    den2.chokyo3_ichidori
+    WHEN '1' THEN '①'
+    WHEN '2' THEN '②'
+    WHEN '3' THEN '③'
+    WHEN '4' THEN '④'
+    WHEN '5' THEN '⑤'
+    WHEN '6' THEN '⑥'
+    WHEN '7' THEN '⑦'
+    WHEN '8' THEN '⑧'
+    WHEN '9' THEN '⑨'
+    ELSE NULL
+  END AS chokyo_ichidori_label,
+  den2.chokyo3_ashiiro AS chokyo_ashiiro,
+  den2.chokyo3_yajirushi AS chokyo_yajirushi,
+  CASE
+    den2.chokyo3_yajirushi
+    WHEN '1' THEN '↑'
+    WHEN '2' THEN '→'
+    WHEN '3' THEN '↓'
+    WHEN '4' THEN '／'
+    WHEN '5' THEN '＼'
+    ELSE NULL
+  END AS chokyo_yajirushi_label,
+  den2.chokyo3_reigai AS chokyo_reigai,
+  -- タイムスタンプ
+  den2.created AS created,
+  den2.modified AS modified
+FROM
+  den2_with_jvd_code AS den2
+WHERE
+  den2.chokyo3_nengappi IS NOT NULL AND den2.chokyo3_nengappi != '' -- 調教3データが存在する場合のみ
