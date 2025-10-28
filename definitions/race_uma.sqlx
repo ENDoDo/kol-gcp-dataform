@@ -211,15 +211,15 @@ WITH
       r.kyori, r.kyori_kubun, r.track_code1_dirtsiba_label, r.toroku_tosu_num,
       s1.tansho1_haraimodoshikin, s1.fukusho1_haraimodoshikin
     FROM
-      `smartkeiba.kolbi_keiba_stg.kol_den2` AS d2
+      ${ref("kol_den2")} AS d2
     LEFT JOIN
-      `smartkeiba.kolbi_keiba_stg.kol_sei2` AS s2 ON d2.race_code_uma_kol = s2.race_code_uma_kol
+      ${ref("kol_sei2")} AS s2 ON d2.race_code_uma_kol = s2.race_code_uma_kol
     LEFT JOIN
-      `smartkeiba.kolbi_keiba_stg.kol_sei1` AS s1 ON SUBSTR(d2.race_code_uma_kol, 1, 16) = s1.race_code_kol
+      ${ref("kol_sei1")} AS s1 ON SUBSTR(d2.race_code_uma_kol, 1, 16) = s1.race_code_kol
     LEFT JOIN
-      `smartkeiba.kolbi_keiba_stg.kol_ket` AS k ON d2.ketto_toroku_bango = k.ketto_toroku_bango_kol
+      ${ref("kol_ket")} AS k ON d2.ketto_toroku_bango = k.ketto_toroku_bango_kol
     LEFT JOIN
-      `smartkeiba.kolbi_analysis_stg.race` AS r ON SUBSTR(d2.race_code_uma_kol, 1, 16) = r.race_code_kol
+      ${ref("race")} AS r ON SUBSTR(d2.race_code_uma_kol, 1, 16) = r.race_code_kol
   ),
 
 -- CTE Step2: ウィンドウ関数を使い、馬ごとに1つ前のレース情報を取得
@@ -349,7 +349,7 @@ SELECT
   SUBSTR(z.rotation8, 1, 1) AS rotation8_label,
   CASE WHEN z.toroku_tosu_num <= 8 THEN '中' WHEN z.wakuban = '1' THEN '内枠' WHEN z.wakuban = '8' THEN '外枠' ELSE '中' END AS waku_kubun,
   z.bataiju,
-  CASE 
+  CASE
     WHEN SAFE_CAST(z.bataiju AS INT64) >= 500 THEN '500kg以上'
     WHEN SAFE_CAST(z.bataiju AS INT64) BETWEEN 480 AND 499 THEN '480～499kg'
     WHEN SAFE_CAST(z.bataiju AS INT64) BETWEEN 460 AND 479 THEN '460～479kg'
@@ -358,7 +358,7 @@ SELECT
     ELSE NULL
   END AS bataiju_kubun,
   z.bataiju_zensou,
-  CASE 
+  CASE
     WHEN SAFE_CAST(z.bataiju_zensou AS INT64) >= 500 THEN '500kg以上'
     WHEN SAFE_CAST(z.bataiju_zensou AS INT64) BETWEEN 480 AND 499 THEN '480～499kg'
     WHEN SAFE_CAST(z.bataiju_zensou AS INT64) BETWEEN 460 AND 479 THEN '460～479kg'
@@ -402,26 +402,26 @@ SELECT
   z.chakusa_code1,
   SAFE_CAST(z.chakusa_code1 AS INT64) AS chakusa_code1_num,
   z.chakusa_code2,
-  CASE z.chakusa_code2 
-    WHEN 'A' THEN 'ハナ' WHEN 'B' THEN 'アタマ' WHEN 'C' THEN 'クビ' 
-    WHEN 'D' THEN '1/2' WHEN 'E' THEN '3/4' WHEN 'F' THEN '1' 
-    WHEN 'G' THEN '1.1/4' WHEN 'H' THEN '1.1/2' WHEN 'I' THEN '1.3/4' 
-    WHEN 'J' THEN '2' WHEN 'K' THEN '2.1/2' WHEN 'L' THEN '3' 
-    WHEN 'M' THEN '3.1/2' WHEN 'N' THEN '4' WHEN 'O' THEN '5' 
-    WHEN 'P' THEN '6' WHEN 'Q' THEN '7' WHEN 'R' THEN '8' 
-    WHEN 'S' THEN '9' WHEN 'T' THEN '10' WHEN 'U' THEN '大差' 
-    ELSE NULL 
+  CASE z.chakusa_code2
+    WHEN 'A' THEN 'ハナ' WHEN 'B' THEN 'アタマ' WHEN 'C' THEN 'クビ'
+    WHEN 'D' THEN '1/2' WHEN 'E' THEN '3/4' WHEN 'F' THEN '1'
+    WHEN 'G' THEN '1.1/4' WHEN 'H' THEN '1.1/2' WHEN 'I' THEN '1.3/4'
+    WHEN 'J' THEN '2' WHEN 'K' THEN '2.1/2' WHEN 'L' THEN '3'
+    WHEN 'M' THEN '3.1/2' WHEN 'N' THEN '4' WHEN 'O' THEN '5'
+    WHEN 'P' THEN '6' WHEN 'Q' THEN '7' WHEN 'R' THEN '8'
+    WHEN 'S' THEN '9' WHEN 'T' THEN '10' WHEN 'U' THEN '大差'
+    ELSE NULL
   END AS chakusa_code2_label,
   CASE WHEN z.chakusa_code1 IS NOT NULL AND z.chakusa_code1 != ' ' THEN z.chakusa_code1 || '馬身' ELSE '' END ||
-  CASE z.chakusa_code2 
-    WHEN 'A' THEN 'ハナ' WHEN 'B' THEN 'アタマ' WHEN 'C' THEN 'クビ' 
-    WHEN 'D' THEN '1/2' WHEN 'E' THEN '3/4' WHEN 'F' THEN '1' 
-    WHEN 'G' THEN '1.1/4' WHEN 'H' THEN '1.1/2' WHEN 'I' THEN '1.3/4' 
-    WHEN 'J' THEN '2' WHEN 'K' THEN '2.1/2' WHEN 'L' THEN '3' 
-    WHEN 'M' THEN '3.1/2' WHEN 'N' THEN '4' WHEN 'O' THEN '5' 
-    WHEN 'P' THEN '6' WHEN 'Q' THEN '7' WHEN 'R' THEN '8' 
-    WHEN 'S' THEN '9' WHEN 'T' THEN '10' WHEN 'U' THEN '大差' 
-    ELSE '' 
+  CASE z.chakusa_code2
+    WHEN 'A' THEN 'ハナ' WHEN 'B' THEN 'アタマ' WHEN 'C' THEN 'クビ'
+    WHEN 'D' THEN '1/2' WHEN 'E' THEN '3/4' WHEN 'F' THEN '1'
+    WHEN 'G' THEN '1.1/4' WHEN 'H' THEN '1.1/2' WHEN 'I' THEN '1.3/4'
+    WHEN 'J' THEN '2' WHEN 'K' THEN '2.1/2' WHEN 'L' THEN '3'
+    WHEN 'M' THEN '3.1/2' WHEN 'N' THEN '4' WHEN 'O' THEN '5'
+    WHEN 'P' THEN '6' WHEN 'Q' THEN '7' WHEN 'R' THEN '8'
+    WHEN 'S' THEN '9' WHEN 'T' THEN '10' WHEN 'U' THEN '大差'
+    ELSE ''
   END AS chakusa_label,
   z.time_sa,
   SAFE_CAST(z.time_sa AS FLOAT64) / 10 AS time_sa_float,
