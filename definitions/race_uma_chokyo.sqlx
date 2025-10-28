@@ -1,13 +1,13 @@
 -- =================================================================
 -- race_uma_chokyo.sqlx
--- 説明: kol_den2, kol_sei2, kol_ketを使い、レース毎・馬毎の調教情報を整形するテーブル。
+-- 説明: kol_den2を使い、レース毎・馬毎の調教情報(chokyo1, chokyo2, chokyo3)を縦持ちに変換するテーブル。
 --       KOL仕様のコードをJRA-VAN仕様に変換し、各種ラベルやフラグ、計算済みのフィールドを付与する。
 -- =================================================================
 
 -- Dataform設定ブロック
 config {
   type: "table",
-  description: "KOLの出馬表(den2), 成績(sei2), 血統(ket)データから、レース毎・馬毎の調教情報を整形したテーブル。",
+  description: "KOLの出馬表(den2)データから、レース毎・馬毎の調教情報(最大3件)を縦持ちに変換して整形したテーブル。",
   columns: {
     // 主キーと外部キー
     race_code_uma_chokyodatakubun_kol: "KOL仕様馬毎レース調教ID",
@@ -572,7 +572,7 @@ SELECT
   den2.chokyo3_yajirushi AS chokyo_yajirushi,
   CASE
     den2.chokyo3_yajirushi
-    WHEN '1' THEN '↑'
+    WHEN '1Loop' THEN '↑'
     WHEN '2' THEN '→'
     WHEN '3' THEN '↓'
     WHEN '4' THEN '／'
