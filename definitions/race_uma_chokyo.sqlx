@@ -79,8 +79,8 @@ WITH
     FROM
       ${ref("kol_den2")}
   )
--- Step2: 調教データ1 (chokyo1) を縦持ちレコードとして抽出
 SELECT
+  -- Step2: 調教データ1 (chokyo1) を縦持ちレコードとして抽出
   -- 主キーと外部キー
   den2.race_code_uma_kol || '1' AS race_code_uma_chokyodatakubun_kol,
   den2.race_code_uma_kol AS race_code_uma_kol,
@@ -251,8 +251,8 @@ WHERE
   den2.chokyo1_nengappi IS NOT NULL
   AND den2.chokyo1_nengappi != '' -- 調教1データが存在する場合のみ
 UNION ALL
--- Step3: 調教データ2 (chokyo2) を縦持ちレコードとして抽出
 SELECT
+  -- Step3: 調教データ2 (chokyo2) を縦持ちレコードとして抽出
   -- 主キーと外部キー
   den2.race_code_uma_kol || '2' AS race_code_uma_chokyodatakubun_kol,
   den2.race_code_uma_kol AS race_code_uma_kol,
@@ -420,8 +420,8 @@ WHERE
   den2.chokyo2_nengappi IS NOT NULL
   AND den2.chokyo2_nengappi != '' -- 調教2データが存在する場合のみ
 UNION ALL
--- Step4: 調教データ3 (chokyo3) を縦持ちレコードとして抽出
 SELECT
+  -- Step4: 調教データ3 (chokyo3) を縦持ちレコードとして抽出
   -- 主キーと外部キー
   den2.race_code_uma_kol || '3' AS race_code_uma_chokyodatakubun_kol,
   den2.race_code_uma_kol AS race_code_uma_kol,
