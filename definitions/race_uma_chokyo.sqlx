@@ -9,7 +9,7 @@ config {
   type: "table",
   description: "KOLの出馬表(den2), 成績(sei2), 血統(ket)データから、レース毎・馬毎の調教情報を整形したテーブル。",
   columns: {
-    -- 主キーと外部キー
+    // 主キーと外部キー
     race_code_uma_chokyodatakubun_kol: "KOL仕様馬毎レース調教ID",
     race_code_uma_kol: "KOL仕様馬毎レースID",
     race_code_uma_jvd: "JRA-VAN仕様馬毎レースID",
@@ -20,7 +20,7 @@ config {
     bamei: "馬名",
     data_sakusei_ymd: "データ作成年月日",
     data_sakusei_date: "データ作成年月日(日付型)",
-    -- 調教データ
+    // 調教データ
     chokyo_flag: "調教フラグ",
     chokyo_flag_label: "調教フラグ(ラベル)",
     chokyo_kijosha: "調教騎乗者",
@@ -51,7 +51,7 @@ config {
     chokyo_yajirushi: "調教矢印",
     chokyo_yajirushi_label: "調教矢印(ラベル)",
     chokyo_reigai: "調教例外",
-    -- タイムスタンプ
+    // タイムスタンプ
     created: "データ作成日時",
     modified: "データ更新日時"
   }
