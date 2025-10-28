@@ -586,6 +586,4 @@ SELECT
 FROM
   den2_with_jvd_code AS den2
 WHERE
-  den2.chokyo3_nengappi IS NOT NULL
-  AND den2.chokyo3_nengappi != '' -- 調教3データが存在する場合のみ
-;
+  den2.chokyo3_nengappi IS NOT NULL AND den2.chokyo3_nengappi != '' -- 調教3データが存在する場合のみ
