@@ -1,14 +1,15 @@
 -- =================================================================
 -- race_uma.sqlx
--- 説明: kol_den2, kol_sei1, kol_sei2, kol_ket, raceを結合し、出走馬に関する情報を整形するテーブル。
+-- 説明: kol_den2, kol_sei1, kol_sei2, kol_ket, kol_den1を結合し、出走馬に関する情報を整形するテーブル。
 --       KOL仕様のコードをJRA-VAN仕様に変換し、各種ラベルやフラグ、計算済みのフィールドを付与する。
 -- =================================================================
 
 -- Dataform設定ブロック
 config {
   type: "table",
-  description: "KOLの出馬表(den2), 成績(sei1, sei2), 血統(ket), レース(race)データを結合し、出走馬に関する情報を整形したマスターテーブル。",
+  description: "KOLの出馬表(den2), 成績(sei1, sei2), 血統(ket), レース(den1)データを結合し、出走馬に関する情報を整形したマスターテーブル。",
   columns: {
+    // ID / コード
     race_code_uma_kol: "KOL仕様馬毎レースID",
     race_code_uma_jvd: "JRA-VAN仕様馬毎レースID",
     race_code_kol: "KOL仕様レースID",
@@ -25,6 +26,7 @@ config {
     umaban: "馬番 2桁",
     umaban_num: "馬番 整数型",
     umaban_even: "馬番が偶数",
+    // 馬情報
     bamei: "馬名",
     seibetsu_code: "性別コード",
     seibetsu_code_label: "性別 牡/牝/せん",
@@ -36,6 +38,7 @@ config {
     blinker_shiyo_kubun_label: "ブリンカー使用 はい/いいえ",
     rating: "レイティング 3桁",
     rating_float: "レイティング 小数点第一位まで",
+    // 馬主・血統
     banushimei: "馬主名",
     banushimei_ryakusho: "馬主名略称",
     ketto_toroku_bango_kol: "KOL仕様 血統登録番号(馬コード)",
@@ -46,6 +49,7 @@ config {
     ketto5_mf_hanshoku_toroku_bango: "血統情報 母父 繁殖登録番号",
     ketto5_mf_bamei: "血統情報 母父 馬名",
     kyuyo_riyu: "休養理由",
+    // 騎手
     kishumei: "騎手名",
     kishumei_ryakusho: "騎手名略称",
     kishu_code: "騎手コード",
@@ -58,6 +62,7 @@ config {
     kishu_shozokubasho_code: "騎手所属場所コード",
     kishu_shozokubasho_code_label: "騎手所属場所",
     kishu_shozoku_chokyoshi_code: "騎手が所属する調教師コード",
+    // 調教師
     chokyoshi_code: "調教師コード",
     chokyoshimei: "調教師名",
     chokyoshimei_ryakusho: "調教師名略称",
@@ -65,6 +70,7 @@ config {
     chokyoshi_shozokubasho_code_label: "調教師所属場所",
     chokyoshi_tracen_kubun: "調教師トレセン区分",
     chokyoshi_tracen_kubun_label: "調教師トレセン区分",
+    // 調教 (den2/sei2由来)
     chokyo_flag: "調教フラグ",
     chokyo_flag_label: "調教フラグ はい/いいえ",
     chokyo_kijosha: "調教騎乗者",
@@ -95,6 +101,7 @@ config {
     chokyo_honsu_hanro_num: "調教本数 坂路(整数)",
     chokyo_honsu_pool: "調教本数 プール",
     chokyo_honsu_pool_num: "調教本数 プール(整数)",
+    // スピード指数・ローテーション
     speed_sisu_last_1: "スピード指数 1走前",
     speed_sisu_last_1_float: "スピード指数 1走前(小数点)",
     speed_sisu_last_2: "スピード指数 2走前",
@@ -121,6 +128,7 @@ config {
     rotation7_label: "ローテーション7週前(ラベル)",
     rotation8: "ローテーション8週前",
     rotation8_label: "ローテーション8週前(ラベル)",
+    // 馬体重・前走比較
     bataiju: "馬体重(kg)",
     bataiju_kubun: "馬体重区分",
     bataiju_zensou: "前走 馬体重kg",
@@ -134,6 +142,7 @@ config {
     track_code1_label_dirtsiba_zensou: "前走 ダ/芝",
     siba_to_dirt_flag: "芝→ダ替わりフラグ",
     dirt_to_siba_flag: "ダ→芝替わりフラグ",
+    // 成績 (sei2)
     record_shisu: "レコード指数",
     record_shisu_num: "レコード指数(整数)",
     zogen_sa: "増減差",
@@ -178,6 +187,7 @@ config {
     corner4_juni_label: "4角順位(ラベル)",
     corner4_ichidori: "4角位置取り",
     corner4_ichidori_label: "4角位置取り(ラベル)",
+    // タイムスタンプ
     created: "データ作成日時",
     modified: "データ更新日時"
   }
@@ -188,11 +198,14 @@ WITH
   base_data AS (
     SELECT
       d2.race_code_uma_kol,
-      SUBSTR(d2.race_code_uma_kol, 1, 16) AS race_code_kol,
+      SUBSTR(d2.race_code_uma_kol, 1, 14) AS race_code_kol, -- 14桁に修正
       CASE d2.keibajo_code WHEN '08' THEN '01' WHEN '09' THEN '02' WHEN '06' THEN '03' WHEN '07' THEN '04' WHEN '04' THEN '05' WHEN '05' THEN '06' WHEN '02' THEN '07' WHEN '00' THEN '08' WHEN '01' THEN '09' WHEN '03' THEN '10' ELSE NULL END AS keibajo_code_jvd_from_kol,
       d2.kaisai_nengappi, d2.kaisai_kaiji, d2.kaisai_nichiji, d2.race_num, d2.umaban,
-      d2.ketto_toroku_bango, -- d2.hasso_jikoku は存在しないため削除
-      r.hasso_date, -- raceテーブルからhasso_dateを取得
+      d2.ketto_toroku_bango,
+
+      -- r.hasso_date のロジック (d1, d2)
+      FORMAT_DATETIME('%Y/%m/%d %H:%M:%S', PARSE_DATETIME('%Y%m%d%H%M', d2.kaisai_nengappi || REPLACE(d1.hasso_jikoku, ':', ''))) AS hasso_date, -- race(r) から d1, d2 に変更
+
       d2.wakuban, d2.bamei, d2.seibetsu_code, d2.barei, d2.futan_juryo, d2.blinker_shiyo_kubun, d2.rating, d2.banushimei, d2.banushimei_ryakusho,
       d2.kyuyo_riyu, d2.kishu_code, d2.kishumei, d2.kishumei_ryakusho, d2.kishu_tozai_shozoku_code, d2.kishu_minarai_code, d2.kishu_norikawari_kubun,
       d2.kishu_shozokubasho_code, d2.kishu_shozoku_chokyoshi_code, d2.chokyoshi_code, d2.chokyoshimei, d2.chokyoshimei_ryakusho, d2.chokyoshi_shozokubasho_code,
@@ -208,18 +221,31 @@ WITH
       s2.chokyo_ashiiro, s2.chokyo_yajirushi, s2.chokyo_reigai, d2.chokyo_awase, d2.chokyo_awase_flag, d2.chokyo_tanpyo, d2.chokyo_honsu_course, d2.chokyo_honsu_hanro, d2.chokyo_honsu_pool,
       k.ketto1_f_hanshoku_toroku_bango, k.ketto1_f_bamei, k.ketto2_m_hanshoku_toroku_bango, k.ketto2_m_bamei,
       k.ketto5_mf_hanshoku_toroku_bango, k.ketto5_mf_bamei,
-      r.kyori, r.kyori_kubun, r.track_code1_dirtsiba_label, r.toroku_tosu_num,
+      SAFE_CAST(d1.kyori AS INT64) AS kyori,
+      CASE
+        WHEN SAFE_CAST(d1.kyori AS INT64) <= 1399 THEN '短距離'
+        WHEN SAFE_CAST(d1.kyori AS INT64) BETWEEN 1400 AND 1699 THEN 'マイル'
+        WHEN SAFE_CAST(d1.kyori AS INT64) BETWEEN 1700 AND 2099 THEN '中距離'
+        WHEN SAFE_CAST(d1.kyori AS INT64) >= 2100 THEN '長距離'
+        ELSE NULL
+      END AS kyori_kubun,
+      CASE s1.track_code1_dirtsiba
+        WHEN '1' THEN '芝'
+        WHEN '0' THEN 'ダ'
+        ELSE NULL
+      END AS track_code1_dirtsiba_label,
+      SAFE_CAST(d1.toroku_tosu AS INT64) AS toroku_tosu_num,
       s1.tansho1_haraimodoshikin, s1.fukusho1_haraimodoshikin
     FROM
       ${ref("kol_den2")} AS d2
     LEFT JOIN
       ${ref("kol_sei2")} AS s2 ON d2.race_code_uma_kol = s2.race_code_uma_kol
     LEFT JOIN
-      ${ref("kol_sei1")} AS s1 ON SUBSTR(d2.race_code_uma_kol, 1, 16) = s1.race_code_kol
+      ${ref("kol_sei1")} AS s1 ON SUBSTR(d2.race_code_uma_kol, 1, 14) = s1.race_code_kol -- 14桁に修正
     LEFT JOIN
       ${ref("kol_ket")} AS k ON d2.ketto_toroku_bango = k.ketto_toroku_bango_kol
     LEFT JOIN
-      ${ref("race")} AS r ON SUBSTR(d2.race_code_uma_kol, 1, 16) = r.race_code_kol
+      ${ref("kol_den1")} AS d1 ON SUBSTR(d2.race_code_uma_kol, 1, 14) = d1.race_code_kol -- race(r) の代わりに d1 をJOIN (キーは14桁)
   ),
 
 -- CTE Step2: ウィンドウ関数を使い、馬ごとに1つ前のレース情報を取得
@@ -245,7 +271,7 @@ SELECT
   z.keibajo_code AS keibajo_code_kol,
   z.hasso_date,
   z.kaisai_kaiji AS kaiji,
-  z.kaisai_kaiji AS nichiji,
+  z.kaisai_kaiji AS nichiji, -- (注: 元のSQL通り kaiji を nichiji にも割り当て)
   z.wakuban,
   z.race_num AS race_bango,
   SAFE_CAST(z.race_num AS INT64) AS race_bango_num,
