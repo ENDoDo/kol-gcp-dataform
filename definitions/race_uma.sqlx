@@ -198,7 +198,7 @@ WITH
   base_data AS (
     SELECT
       d2.race_code_uma_kol,
-      SUBSTR(d2.race_code_uma_kol, 1, 14) AS race_code_kol, -- 14桁に修正
+      SUBSTR(d2.race_code_uma_kol, 1, 16) AS race_code_kol, -- 16桁に修正
       CASE d2.keibajo_code WHEN '08' THEN '01' WHEN '09' THEN '02' WHEN '06' THEN '03' WHEN '07' THEN '04' WHEN '04' THEN '05' WHEN '05' THEN '06' WHEN '02' THEN '07' WHEN '00' THEN '08' WHEN '01' THEN '09' WHEN '03' THEN '10' ELSE NULL END AS keibajo_code_jvd_from_kol,
       d2.kaisai_nengappi, d2.kaisai_kaiji, d2.kaisai_nichiji, d2.race_num, d2.umaban,
       d2.ketto_toroku_bango,
@@ -239,13 +239,13 @@ WITH
     FROM
       ${ref("kol_den2")} AS d2
     LEFT JOIN
+      ${ref("kol_den1")} AS d1 ON SUBSTR(d2.race_code_uma_kol, 1, 16) = d1.race_code_kol
+    LEFT JOIN
       ${ref("kol_sei2")} AS s2 ON d2.race_code_uma_kol = s2.race_code_uma_kol
     LEFT JOIN
-      ${ref("kol_sei1")} AS s1 ON SUBSTR(d2.race_code_uma_kol, 1, 14) = s1.race_code_kol -- 14桁に修正
+      ${ref("kol_sei1")} AS s1 ON SUBSTR(d2.race_code_uma_kol, 1, 16) = s1.race_code_kol
     LEFT JOIN
       ${ref("kol_ket")} AS k ON d2.ketto_toroku_bango = k.ketto_toroku_bango_kol
-    LEFT JOIN
-      ${ref("kol_den1")} AS d1 ON SUBSTR(d2.race_code_uma_kol, 1, 14) = d1.race_code_kol -- race(r) の代わりに d1 をJOIN (キーは14桁)
   ),
 
 -- CTE Step2: ウィンドウ関数を使い、馬ごとに1つ前のレース情報を取得

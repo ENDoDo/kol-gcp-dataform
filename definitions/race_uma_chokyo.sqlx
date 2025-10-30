@@ -88,8 +88,8 @@ SELECT
   (
     den2.kaisai_nengappi || den2.keibajo_code_jvd || den2.kaisai_kaiji || den2.kaisai_nichiji || den2.race_num || den2.umaban
   ) AS race_code_uma_jvd,
-  -- KOL仕様 レースID (馬番なし14桁)
-  SUBSTR(den2.race_code_uma_kol, 1, 14) AS race_code_kol,
+  -- KOL仕様 レースID (馬番なし16桁)
+  SUBSTR(den2.race_code_uma_kol, 1, 16) AS race_code_kol,
   -- JRA-VAN仕様 レースID
   (
     den2.kaisai_nengappi || den2.keibajo_code_jvd || den2.kaisai_kaiji || den2.kaisai_nichiji || den2.race_num
@@ -259,7 +259,7 @@ SELECT
   (
     den2.kaisai_nengappi || den2.keibajo_code_jvd || den2.kaisai_kaiji || den2.kaisai_nichiji || den2.race_num || den2.umaban
   ) AS race_code_uma_jvd,
-  SUBSTR(den2.race_code_uma_kol, 1, 14) AS race_code_kol,
+  SUBSTR(den2.race_code_uma_kol, 1, 16) AS race_code_kol,
   (
     den2.kaisai_nengappi || den2.keibajo_code_jvd || den2.kaisai_kaiji || den2.kaisai_nichiji || den2.race_num
   ) AS race_code_jvd,
@@ -428,7 +428,7 @@ SELECT
   (
     den2.kaisai_nengappi || den2.keibajo_code_jvd || den2.kaisai_kaiji || den2.kaisai_nichiji || den2.race_num || den2.umaban
   ) AS race_code_uma_jvd,
-  SUBSTR(den2.race_code_uma_kol, 1, 14) AS race_code_kol,
+  SUBSTR(den2.race_code_uma_kol, 1, 16) AS race_code_kol,
   (
     den2.kaisai_nengappi || den2.keibajo_code_jvd || den2.kaisai_kaiji || den2.kaisai_nichiji || den2.race_num
   ) AS race_code_jvd,
