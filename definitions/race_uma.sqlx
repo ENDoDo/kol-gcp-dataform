@@ -201,7 +201,7 @@ WITH
   base_data AS (
     SELECT
       d2.race_code_uma_kol,
-      SUBSTR(d2.race_code_uma_kol, 1, 16) AS race_code_kol, -- 16桁に修正
+      SUBSTR(d2.race_code_uma_kol, 1, 16) AS race_code_kol,
       CASE d2.keibajo_code WHEN '08' THEN '01' WHEN '09' THEN '02' WHEN '06' THEN '03' WHEN '07' THEN '04' WHEN '04' THEN '05' WHEN '05' THEN '06' WHEN '02' THEN '07' WHEN '00' THEN '08' WHEN '01' THEN '09' WHEN '03' THEN '10' ELSE NULL END AS keibajo_code_jvd_from_kol,
       d2.kaisai_nengappi, d2.kaisai_kaiji, d2.kaisai_nichiji, d2.race_num, d2.umaban,
       d2.ketto_toroku_bango,
@@ -430,7 +430,23 @@ CASE z.chokyoshi_shozokubasho_code
   SUBSTR(z.rotation7, 1, 1) AS rotation7_label,
   z.rotation8,
   SUBSTR(z.rotation8, 1, 1) AS rotation8_label,
-  CASE WHEN z.toroku_tosu_num <= 8 THEN '中' WHEN z.wakuban = '1' THEN '内枠' WHEN z.wakuban = '8' THEN '外枠' ELSE '中' END AS waku_kubun,
+    CASE
+    WHEN z.rotation1 IS NOT NULL THEN '連闘'
+    WHEN z.rotation2 IS NOT NULL THEN '中1週'
+    WHEN z.rotation3 IS NOT NULL THEN '中2週'
+    WHEN z.rotation4 IS NOT NULL THEN '中3週'
+    WHEN z.rotation5 IS NOT NULL THEN '中4週'
+    WHEN z.rotation6 IS NOT NULL THEN '中5週'
+    WHEN z.rotation7 IS NOT NULL THEN '中6週'
+    WHEN z.rotation8 IS NOT NULL THEN '中7週'
+    ELSE NULL
+  END AS zensou_kankaku,
+  CASE
+    WHEN z.toroku_tosu_num <= 8 THEN '中'
+    WHEN z.wakuban = '1' THEN '内枠'
+    WHEN z.wakuban = '8' THEN '外枠'
+    ELSE '中'
+  END AS waku_kubun,
   z.bataiju,
   CASE
     WHEN SAFE_CAST(z.bataiju AS INT64) >= 500 THEN '500kg以上'
@@ -470,15 +486,37 @@ CASE z.chokyoshi_shozokubasho_code
   z.kakutei_chakujun,
   SAFE_CAST(z.kakutei_chakujun AS INT64) AS kakutei_chakujun_num,
   z.tansho1_haraimodoshikin AS tansho_haraimodoshi,
+  SAFE_CAST(z.tansho1_haraimodoshikin AS INT64) AS tansho_haraimodoshi_num,
   z.fukusho1_haraimodoshikin AS fukusho_haraimodoshi,
+  SAFE_CAST(z.fukusho1_haraimodoshikin AS INT64) AS fukusho_haraimodoshi_num,
   z.ijo_kubun_code1,
-  CASE z.ijo_kubun_code1 WHEN '1' THEN '落馬' WHEN '2' THEN '失格' WHEN '3' THEN '中止' WHEN '4' THEN '取消' WHEN '5' THEN '除外' WHEN '6' THEN '降着' WHEN '7' THEN '繰上げ' ELSE NULL END AS ijo_kubun_code1_label,
+  CASE z.ijo_kubun_code1
+    WHEN '1' THEN '落馬'
+    WHEN '2' THEN '失格'
+    WHEN '3' THEN '中止'
+    WHEN '4' THEN '取消'
+    WHEN '5' THEN '除外'
+    WHEN '6' THEN '降着'
+    WHEN '7' THEN '繰上げ'
+    ELSE NULL
+  END AS ijo_kubun_code1_label,
   z.ijo_kubun_code2,
-  CASE z.ijo_kubun_code2 WHEN '01' THEN '出走取消' WHEN '02' THEN '出走除外' WHEN '03' THEN '競走除外' WHEN '04' THEN '競走中止' WHEN '05' THEN '放馬' WHEN '06' THEN '発走除外' ELSE NULL END AS ijo_kubun_code2_label,
+  CASE z.ijo_kubun_code2
+    WHEN '01' THEN '出走取消'
+    WHEN '02' THEN '出走除外'
+    WHEN '03' THEN '競走除外'
+    WHEN '04' THEN '競走中止'
+    WHEN '05' THEN '放馬'
+    WHEN '06' THEN '発走除外'
+    ELSE NULL
+  END AS ijo_kubun_code2_label,
   z.nyusen_juni,
   SAFE_CAST(z.nyusen_juni AS INT64) AS nyusen_juni_num,
   z.record_flag,
-  CASE z.record_flag WHEN '1' THEN 'はい' ELSE 'いいえ' END AS record_flag_label,
+  CASE z.record_flag
+    WHEN '1' THEN 'はい'
+    ELSE 'いいえ'
+  END AS record_flag_label,
   z.soha_time,
   SUBSTR(z.soha_time, 1, 1) || '分' || SUBSTR(z.soha_time, 2, 2) || '.' || SUBSTR(z.soha_time, 4, 1) || '秒' AS soha_time_label,
   SAFE_CAST(SUBSTR(z.soha_time, 1, 1) AS FLOAT64) * 60 + SAFE_CAST(SUBSTR(z.soha_time, 2, 2) AS FLOAT64) + SAFE_CAST(SUBSTR(z.soha_time, 4, 1) AS FLOAT64) / 10 AS soha_time_float,
