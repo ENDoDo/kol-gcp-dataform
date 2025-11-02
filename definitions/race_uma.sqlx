@@ -128,6 +128,7 @@ config {
     rotation7_label: "ローテーション7週前(ラベル)",
     rotation8: "ローテーション8週前",
     rotation8_label: "ローテーション8週前(ラベル)",
+    zensou_kankaku: "前走との間隔。rotatin1～8の確定着順をもとに判定 連闘/中1周/中2週/中3週/中4週/中5週/中6週/中7週",
     // 馬体重・前走比較
     bataiju: "馬体重(kg)",
     bataiju_kubun: "馬体重区分",
@@ -154,7 +155,9 @@ config {
     kakutei_chakujun: "確定着順",
     kakutei_chakujun_num: "確定着順(整数)",
     tansho_haraimodoshi: "単勝払戻",
+    tansho_haraimodoshi_num: "単勝払戻(整数)",
     fukusho_haraimodoshi: "複勝払戻",
+    fukusho_haraimodoshi_num: "複勝払戻(整数)",
     ijo_kubun_code1: "異常区分コード1",
     ijo_kubun_code1_label: "異常区分コード1(ラベル)",
     ijo_kubun_code2: "異常区分コード2",
@@ -202,10 +205,7 @@ WITH
       CASE d2.keibajo_code WHEN '08' THEN '01' WHEN '09' THEN '02' WHEN '06' THEN '03' WHEN '07' THEN '04' WHEN '04' THEN '05' WHEN '05' THEN '06' WHEN '02' THEN '07' WHEN '00' THEN '08' WHEN '01' THEN '09' WHEN '03' THEN '10' ELSE NULL END AS keibajo_code_jvd_from_kol,
       d2.kaisai_nengappi, d2.kaisai_kaiji, d2.kaisai_nichiji, d2.race_num, d2.umaban,
       d2.ketto_toroku_bango,
-
-      -- r.hasso_date のロジック (d1, d2)
-      FORMAT_DATETIME('%Y/%m/%d %H:%M:%S', PARSE_DATETIME('%Y%m%d%H%M', d2.kaisai_nengappi || REPLACE(d1.hasso_jikoku, ':', ''))) AS hasso_date, -- race(r) から d1, d2 に変更
-
+      FORMAT_DATETIME('%Y/%m/%d %H:%M:%S', PARSE_DATETIME('%Y%m%d%H%M', d2.kaisai_nengappi || REPLACE(d1.hasso_jikoku, ':', ''))) AS hasso_date,
       d2.wakuban, d2.bamei, d2.seibetsu_code, d2.barei, d2.futan_juryo, d2.blinker_shiyo_kubun, d2.rating, d2.banushimei, d2.banushimei_ryakusho,
       d2.kyuyo_riyu, d2.kishu_code, d2.kishumei, d2.kishumei_ryakusho, d2.kishu_tozai_shozoku_code, d2.kishu_minarai_code, d2.kishu_norikawari_kubun,
       d2.kishu_shozokubasho_code, d2.kishu_shozoku_chokyoshi_code, d2.chokyoshi_code, d2.chokyoshimei, d2.chokyoshimei_ryakusho, d2.chokyoshi_shozokubasho_code,
@@ -281,13 +281,21 @@ SELECT
   z.rating,
   SAFE_CAST(z.rating AS FLOAT64) / 10 AS rating_float,
   z.seibetsu_code,
-  CASE z.seibetsu_code WHEN '1' THEN '牡' WHEN '2' THEN '牝' WHEN '3' THEN 'せん' ELSE NULL END AS seibetsu_code_label,
+  CASE z.seibetsu_code
+    WHEN '0' THEN '牡'
+    WHEN '1' THEN '牝'
+    WHEN '2' THEN 'せん'
+    ELSE NULL
+  END AS seibetsu_code_label,
   z.barei,
   SAFE_CAST(z.barei AS INT64) AS barei_num,
   z.futan_juryo,
   SAFE_CAST(z.futan_juryo AS FLOAT64) / 10 AS futan_juryo_float,
   z.blinker_shiyo_kubun,
-  CASE z.blinker_shiyo_kubun WHEN '1' THEN 'はい' ELSE 'いいえ' END AS blinker_shiyo_kubun_label,
+  CASE z.blinker_shiyo_kubun
+    WHEN '1' THEN 'はい'
+    ELSE 'いいえ'
+  END AS blinker_shiyo_kubun_label,
   z.kyuyo_riyu,
   z.banushimei,
   z.banushimei_ryakusho,
@@ -302,23 +310,56 @@ SELECT
   z.kishumei,
   z.kishumei_ryakusho,
   z.kishu_tozai_shozoku_code,
-  CASE z.kishu_tozai_shozoku_code WHEN '1' THEN '西' WHEN '2' THEN '東' WHEN '3' THEN '招待' ELSE NULL END AS kishu_tozai_shozoku_code_label,
+  CASE z.kishu_tozai_shozoku_code
+    WHEN '1' THEN '西'
+    WHEN '2' THEN '東'
+    WHEN '3' THEN '招待'
+    ELSE NULL
+  END AS kishu_tozai_shozoku_code_label,
   z.kishu_minarai_code,
-  CASE z.kishu_minarai_code WHEN '1' THEN '1kg減' WHEN '2' THEN '2kg減' WHEN '3' THEN '3kg減' WHEN '4' THEN '4kg減' WHEN '5' THEN '女性2kg減' ELSE NULL END AS kishu_minarai_code_label,
+  CASE z.kishu_minarai_code
+    WHEN '1' THEN '1kg減'
+    WHEN '2' THEN '2kg減'
+    WHEN '3' THEN '3kg減'
+    WHEN '4' THEN '4kg減'
+    WHEN '5' THEN '女性2kg減'
+    ELSE NULL
+  END AS kishu_minarai_code_label,
   z.kishu_shozokubasho_code,
-  CASE z.kishu_shozokubasho_code WHEN '001' THEN '栗東' WHEN '002' THEN '美浦南' WHEN '003' THEN '美浦北' ELSE NULL END AS kishu_shozokubasho_code_label,
+  CASE z.kishu_shozokubasho_code
+    WHEN '001' THEN '栗東'
+    WHEN '002' THEN '美浦南'
+    WHEN '003' THEN '美浦北'
+    ELSE NULL
+  END AS kishu_shozokubasho_code_label,
   z.kishu_shozoku_chokyoshi_code,
   z.kishu_norikawari_kubun,
-  CASE z.kishu_norikawari_kubun WHEN '1' THEN 'はい' ELSE 'いいえ' END AS kishu_norikawari_kubun_label,
+  CASE z.kishu_norikawari_kubun
+    WHEN '1' THEN 'はい'
+    ELSE 'いいえ'
+  END AS kishu_norikawari_kubun_label,
   z.chokyoshi_code,
   z.chokyoshimei,
   z.chokyoshimei_ryakusho,
   z.chokyoshi_shozokubasho_code,
-  CASE z.chokyoshi_shozokubasho_code WHEN '001' THEN '栗東' WHEN '002' THEN '美浦南' WHEN '003' THEN '美浦北' ELSE NULL END AS chokyoshi_shozokubasho_code_label,
+CASE z.chokyoshi_shozokubasho_code
+    WHEN '001' THEN '栗東'
+    WHEN '002' THEN '美浦南'
+    WHEN '003' THEN '美浦北'
+    ELSE NULL
+  END AS chokyoshi_shozokubasho_code_label,
   z.chokyoshi_tracen_kubun,
-  CASE z.chokyoshi_tracen_kubun WHEN '1' THEN '栗東' WHEN '2' THEN '美浦南' WHEN '3' THEN '美浦北' ELSE NULL END AS chokyoshi_tracen_kubun_label,
+  CASE z.chokyoshi_tracen_kubun
+    WHEN '1' THEN '栗東'
+    WHEN '2' THEN '美浦南'
+    WHEN '3' THEN '美浦北'
+    ELSE NULL
+  END AS chokyoshi_tracen_kubun_label,
   z.chokyo_flag,
-  CASE z.chokyo_flag WHEN '1' THEN 'はい' ELSE 'いいえ' END AS chokyo_flag_label,
+  CASE z.chokyo_flag
+    WHEN '1' THEN 'はい'
+    ELSE 'いいえ'
+  END AS chokyo_flag_label,
   z.chokyo_kijosha,
   SAFE.PARSE_DATE('%Y%m%d', z.chokyo_nengappi) AS chokyo_date,
   z.chokyo_basho,
@@ -334,12 +375,28 @@ SELECT
   z.chokyo_ichidori,
   z.chokyo_ashiiro,
   z.chokyo_yajirushi,
-  CASE z.chokyo_yajirushi WHEN '1' THEN '一変(↑)' WHEN '2' THEN '平行(→)' WHEN '3' THEN '下降(↓)' WHEN '4' THEN '良化(／)' WHEN '5' THEN '下降気味(＼)' ELSE NULL END AS chokyo_yajirushi_label,
+  CASE z.chokyo_yajirushi
+    WHEN '1' THEN '一変(↑)'
+    WHEN '2' THEN '平行(→)'
+    WHEN '3' THEN '下降(↓)'
+    WHEN '4' THEN '良化(／)'
+    WHEN '5' THEN '下降気味(＼)'
+    ELSE NULL
+  END AS chokyo_yajirushi_label,
   z.chokyo_reigai,
   z.chokyo_awase,
-  CASE WHEN z.chokyo_awase LIKE '%同入%' THEN '同入' WHEN z.chokyo_awase LIKE '%遅れ%' THEN '遅れ' WHEN z.chokyo_awase LIKE '%先着%' THEN '先着' ELSE NULL END AS chokyo_awase_kubun,
+  CASE
+    WHEN z.chokyo_awase LIKE '%同入%' THEN '同入'
+    WHEN z.chokyo_awase LIKE '%遅れ%' THEN '遅れ'
+    WHEN z.chokyo_awase LIKE '%先着%' THEN '先着'
+    ELSE NULL
+  END AS chokyo_awase_kubun,
   z.chokyo_awase_flag,
-  CASE z.chokyo_awase_flag WHEN '1' THEN '調教2の併せ' WHEN '2' THEN '調教3の併せ' ELSE NULL END AS chokyo_awase_flag_label,
+  CASE z.chokyo_awase_flag
+    WHEN '1' THEN '調教2の併せ'
+    WHEN '2' THEN '調教3の併せ'
+    ELSE NULL
+  END AS chokyo_awase_flag_label,
   z.chokyo_tanpyo,
   z.chokyo_honsu_course,
   SAFE_CAST(z.chokyo_honsu_course AS INT64) AS chokyo_honsu_course_num,
