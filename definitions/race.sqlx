@@ -102,8 +102,21 @@ SELECT
       CONCAT(
         d1.kyosomei_15moji,
         CASE
-          WHEN d1.grade_code IS NOT NULL AND d1.grade_code IN ('0', '1', '2', '3', '4', '5')
-          THEN CONCAT('(', (CASE d1.grade_code WHEN '0' THEN 'GⅠ' WHEN '1' THEN 'GⅡ' WHEN '2' THEN 'GⅢ' WHEN '3' THEN 'JGⅠ' WHEN '4' THEN 'JGⅡ' WHEN '5' THEN 'JGⅢ' END), ')')
+          WHEN d1.grade_code IS NOT NULL AND d1.grade_code IN ('0', '1', '2', '3', '4', '5') THEN
+            CONCAT(
+              '(',
+              (
+                CASE d1.grade_code
+                  WHEN '0' THEN 'GⅠ'
+                  WHEN '1' THEN 'GⅡ'
+                  WHEN '2' THEN 'GⅢ'
+                  WHEN '3' THEN 'JGⅠ'
+                  WHEN '4' THEN 'JGⅡ'
+                  WHEN '5' THEN 'JGⅢ'
+                END
+              ),
+              ')'
+            )
           ELSE ''
         END
       )
@@ -143,10 +156,17 @@ SELECT
   d1.keibajo_code_jvd_from_kol AS keibajo_code_jvd,
   d1.keibajo_code AS keibajo_code_kol,
   CASE d1.keibajo_code_jvd_from_kol
-    WHEN '01' THEN '札幌' WHEN '02' THEN '函館' WHEN '03' THEN '福島'
-    WHEN '04' THEN '新潟' WHEN '05' THEN '東京' WHEN '06' THEN '中山'
-    WHEN '07' THEN '中京' WHEN '08' THEN '京都' WHEN '09' THEN '阪神'
-    WHEN '10' THEN '小倉' ELSE NULL
+    WHEN '01' THEN '札幌'
+    WHEN '02' THEN '函館'
+    WHEN '03' THEN '福島'
+    WHEN '04' THEN '新潟'
+    WHEN '05' THEN '東京'
+    WHEN '06' THEN '中山'
+    WHEN '07' THEN '中京'
+    WHEN '08' THEN '京都'
+    WHEN '09' THEN '阪神'
+    WHEN '10' THEN '小倉'
+    ELSE NULL
   END AS keibajo_name,
   d1.chuo_chiho_kubun,
   CASE d1.chuo_chiho_kubun
@@ -287,11 +307,13 @@ SELECT
   END AS pace_kekka_label,
   d1.race_tanpyo,
   CASE
-    WHEN d1.bettei_barei_handicap_summary_code IN ('00', '01') THEN 'はい'
+    WHEN d1.bettei_barei_handicap_summary_code IN ('00', '01')
+    THEN 'はい'
     ELSE 'いいえ'
   END AS juryo_handicap_flag,
   CASE
-    WHEN d1.keibajo_code IN ('08', '09', '06', '03') AND SAFE_CAST(d1.kyori AS INT64) >= 1700 THEN 'はい'
+    WHEN d1.keibajo_code IN ('08', '09', '06', '03') AND SAFE_CAST(d1.kyori AS INT64) >= 1700
+    THEN 'はい'
     ELSE 'いいえ'
   END AS keibajo_komawari_curve4_flag,
   CASE
