@@ -311,7 +311,22 @@ WITH
         ELSE NULL
       END AS track_code1_dirtsiba_label,
       SAFE_CAST(d1.toroku_tosu AS INT64) AS toroku_tosu_num,
-      s1.tansho1_haraimodoshikin, s1.fukusho1_haraimodoshikin
+      s1.tansho1_umaban,
+      s1.tansho1_haraimodoshikin,
+      s1.tansho2_umaban,
+      s1.tansho2_haraimodoshikin,
+      s1.tansho3_umaban,
+      s1.tansho3_haraimodoshikin,
+      s1.fukusho1_umaban,
+      s1.fukusho1_haraimodoshikin,
+      s1.fukusho2_umaban,
+      s1.fukusho2_haraimodoshikin,
+      s1.fukusho3_umaban,
+      s1.fukusho3_haraimodoshikin,
+      s1.fukusho4_umaban,
+      s1.fukusho4_haraimodoshikin,
+      s1.fukusho5_umaban,
+      s1.fukusho5_haraimodoshikin
     FROM
       ${ref("kol_den2")} AS d2
     LEFT JOIN
@@ -588,10 +603,38 @@ SELECT
   SAFE_CAST(z.tansho_odds AS FLOAT64) / 10 AS tansho_odds_float,
   z.kakutei_chakujun,
   SAFE_CAST(z.kakutei_chakujun AS INT64) AS kakutei_chakujun_num,
-  z.tansho1_haraimodoshikin AS tansho_haraimodoshi,
-  SAFE_CAST(z.tansho1_haraimodoshikin AS INT64) AS tansho_haraimodoshi_num,
-  z.fukusho1_haraimodoshikin AS fukusho_haraimodoshi,
-  SAFE_CAST(z.fukusho1_haraimodoshikin AS INT64) AS fukusho_haraimodoshi_num,
+  CASE
+    WHEN z.tansho3_umaban IS NOT NULL THEN z.tansho3_haraimodoshikin
+    WHEN z.tansho2_umaban IS NOT NULL THEN z.tansho2_haraimodoshikin
+    WHEN z.tansho1_umaban IS NOT NULL THEN z.tansho1_haraimodoshikin
+    ELSE NULL
+  END AS tansho_haraimodoshi,
+  SAFE_CAST(
+    CASE
+      WHEN z.tansho3_umaban IS NOT NULL THEN z.tansho3_haraimodoshikin
+      WHEN z.tansho2_umaban IS NOT NULL THEN z.tansho2_haraimodoshikin
+      WHEN z.tansho1_umaban IS NOT NULL THEN z.tansho1_haraimodoshikin
+      ELSE NULL
+    END
+  AS INT64) AS tansho_haraimodoshi_num,
+  CASE
+    WHEN z.fukusho5_umaban IS NOT NULL THEN z.fukusho5_haraimodoshikin
+    WHEN z.fukusho4_umaban IS NOT NULL THEN z.fukusho4_haraimodoshikin
+    WHEN z.fukusho3_umaban IS NOT NULL THEN z.fukusho3_haraimodoshikin
+    WHEN z.fukusho2_umaban IS NOT NULL THEN z.fukusho2_haraimodoshikin
+    WHEN z.fukusho1_umaban IS NOT NULL THEN z.fukusho1_haraimodoshikin
+    ELSE NULL
+  END AS fukusho_haraimodoshi,
+  SAFE_CAST(
+    CASE
+      WHEN z.fukusho5_umaban IS NOT NULL THEN z.fukusho5_haraimodoshikin
+      WHEN z.fukusho4_umaban IS NOT NULL THEN z.fukusho4_haraimodoshikin
+      WHEN z.fukusho3_umaban IS NOT NULL THEN z.fukusho3_haraimodoshikin
+      WHEN z.fukusho2_umaban IS NOT NULL THEN z.fukusho2_haraimodoshikin
+      WHEN z.fukusho1_umaban IS NOT NULL THEN z.fukusho1_haraimodoshikin
+      ELSE NULL
+    END
+  AS INT64) AS fukusho_haraimodoshi_num,
   z.ijo_kubun_code1,
   CASE z.ijo_kubun_code1
     WHEN '1' THEN '落馬'
