@@ -292,8 +292,8 @@ SELECT
   z.futan_juryo,
   SAFE_CAST(z.futan_juryo AS FLOAT64) / 10 AS futan_juryo_float,
   z.blinker_shiyo_kubun,
-  CASE z.blinker_shiyo_kubun
-    WHEN '1' THEN 'はい'
+  CASE
+    WHEN z.blinker_shiyo_kubun = '1' THEN 'はい'
     ELSE 'いいえ'
   END AS blinker_shiyo_kubun_label,
   z.kyuyo_riyu,
@@ -334,15 +334,15 @@ SELECT
   END AS kishu_shozokubasho_code_label,
   z.kishu_shozoku_chokyoshi_code,
   z.kishu_norikawari_kubun,
-  CASE z.kishu_norikawari_kubun
-    WHEN '1' THEN 'はい'
+  CASE
+    WHEN z.kishu_norikawari_kubun = '1' THEN 'はい'
     ELSE 'いいえ'
   END AS kishu_norikawari_kubun_label,
   z.chokyoshi_code,
   z.chokyoshimei,
   z.chokyoshimei_ryakusho,
   z.chokyoshi_shozokubasho_code,
-CASE z.chokyoshi_shozokubasho_code
+  CASE z.chokyoshi_shozokubasho_code
     WHEN '001' THEN '栗東'
     WHEN '002' THEN '美浦南'
     WHEN '003' THEN '美浦北'
@@ -356,8 +356,8 @@ CASE z.chokyoshi_shozokubasho_code
     ELSE NULL
   END AS chokyoshi_tracen_kubun_label,
   z.chokyo_flag,
-  CASE z.chokyo_flag
-    WHEN '1' THEN 'はい'
+  CASE
+    WHEN z.chokyo_flag = '1' THEN 'はい'
     ELSE 'いいえ'
   END AS chokyo_flag_label,
   z.chokyo_kijosha,
@@ -465,16 +465,43 @@ CASE z.chokyoshi_shozokubasho_code
     WHEN SAFE_CAST(z.bataiju_zensou AS INT64) < 440 THEN '439kg以下'
     ELSE NULL
   END AS bataiju_kubun_zensou,
-  CASE WHEN MOD(SAFE_CAST(z.umaban AS INT64), 2) = 0 THEN 'はい' ELSE 'いいえ' END AS umaban_even,
+  CASE
+    WHEN MOD(SAFE_CAST(z.umaban AS INT64), 2) = 0 THEN 'はい'
+    ELSE 'いいえ'
+  END AS umaban_even,
   z.kyori_kubun_zensou,
-  CASE WHEN z.kyori > z.kyori_zensou THEN 'はい' ELSE 'いいえ' END AS kyori_extension_flag,
-  CASE WHEN z.kyori < z.kyori_zensou THEN 'はい' ELSE 'いいえ' END AS kyori_shortening_flag,
-  CASE WHEN (z.chokyoshi_tracen_kubun = '1' AND z.keibajo_code IN ('04', '05', '07', '06')) THEN 'はい' ELSE 'いいえ' END AS ensei_kansai_to_kantou_flag,
-  CASE WHEN z.chokyoshi_tracen_kubun IN ('2', '3') AND z.keibajo_code IN ('00', '01', '03', '02') THEN 'はい' ELSE 'いいえ' END AS ensei_kantou_to_kansai_flag,
-  CASE WHEN (z.chokyoshi_tracen_kubun = '1' AND z.keibajo_code IN ('04', '05', '07', '06')) OR (z.chokyoshi_tracen_kubun IN ('2', '3') AND z.keibajo_code IN ('00', '01', '03', '02')) THEN 'はい' ELSE 'いいえ' END AS ensei_flag,
+  CASE
+    WHEN z.kyori > z.kyori_zensou THEN 'はい'
+    ELSE 'いいえ'
+  END AS kyori_extension_flag,
+  CASE
+    WHEN z.kyori < z.kyori_zensou THEN 'はい'
+    ELSE 'いいえ'
+  END AS kyori_shortening_flag,
+  CASE
+    WHEN (z.chokyoshi_tracen_kubun = '1' AND z.keibajo_code IN ('04', '05', '07', '06')) THEN 'はい'
+    ELSE 'いいえ'
+  END AS ensei_kansai_to_kantou_flag,
+  CASE
+    WHEN z.chokyoshi_tracen_kubun IN ('2', '3') AND z.keibajo_code IN ('00', '01', '03', '02') THEN 'はい'
+    ELSE 'いいえ'
+  END AS ensei_kantou_to_kansai_flag,
+  CASE
+    WHEN
+      (z.chokyoshi_tracen_kubun = '1' AND z.keibajo_code IN ('04', '05', '07', '06'))
+      OR (z.chokyoshi_tracen_kubun IN ('2', '3') AND z.keibajo_code IN ('00', '01', '03', '02'))
+    THEN 'はい'
+    ELSE 'いいえ'
+  END AS ensei_flag,
   z.track_code1_label_dirtsiba_zensou,
-  CASE WHEN z.track_code1_label_dirtsiba_zensou = '芝' AND z.track_code1_dirtsiba_label = 'ダ' THEN 'はい' ELSE 'いいえ' END AS siba_to_dirt_flag,
-  CASE WHEN z.track_code1_label_dirtsiba_zensou = 'ダ' AND z.track_code1_dirtsiba_label = '芝' THEN 'はい' ELSE 'いいえ' END AS dirt_to_siba_flag,
+  CASE
+    WHEN z.track_code1_label_dirtsiba_zensou = '芝' AND z.track_code1_dirtsiba_label = 'ダ' THEN 'はい'
+    ELSE 'いいえ'
+  END AS siba_to_dirt_flag,
+  CASE
+    WHEN z.track_code1_label_dirtsiba_zensou = 'ダ' AND z.track_code1_dirtsiba_label = '芝' THEN 'はい'
+    ELSE 'いいえ'
+  END AS dirt_to_siba_flag,
   z.record_shisu,
   SAFE_CAST(z.record_shisu AS INT64) AS record_shisu_num,
   z.zogen_sa,
@@ -513,8 +540,8 @@ CASE z.chokyoshi_shozokubasho_code
   z.nyusen_juni,
   SAFE_CAST(z.nyusen_juni AS INT64) AS nyusen_juni_num,
   z.record_flag,
-  CASE z.record_flag
-    WHEN '1' THEN 'はい'
+  CASE
+    WHEN z.record_flag = '1' THEN 'はい'
     ELSE 'いいえ'
   END AS record_flag_label,
   z.soha_time,
@@ -524,26 +551,34 @@ CASE z.chokyoshi_shozokubasho_code
   SAFE_CAST(z.chakusa_code1 AS INT64) AS chakusa_code1_num,
   z.chakusa_code2,
   CASE z.chakusa_code2
-    WHEN 'A' THEN 'ハナ' WHEN 'B' THEN 'アタマ' WHEN 'C' THEN 'クビ'
-    WHEN 'D' THEN '1/2' WHEN 'E' THEN '3/4' WHEN 'F' THEN '1'
-    WHEN 'G' THEN '1.1/4' WHEN 'H' THEN '1.1/2' WHEN 'I' THEN '1.3/4'
-    WHEN 'J' THEN '2' WHEN 'K' THEN '2.1/2' WHEN 'L' THEN '3'
-    WHEN 'M' THEN '3.1/2' WHEN 'N' THEN '4' WHEN 'O' THEN '5'
-    WHEN 'P' THEN '6' WHEN 'Q' THEN '7' WHEN 'R' THEN '8'
-    WHEN 'S' THEN '9' WHEN 'T' THEN '10' WHEN 'U' THEN '大差'
+    WHEN '0' THEN 'ハナ'
+    WHEN '1' THEN 'アタマ'
+    WHEN '2' THEN 'クビ'
+    WHEN '3' THEN '1/2'
+    WHEN '4' THEN '1/4'
+    WHEN '5' THEN '3/4'
+    WHEN '7' THEN '大差'
+    WHEN '8' THEN '同着'
     ELSE NULL
   END AS chakusa_code2_label,
-  CASE WHEN z.chakusa_code1 IS NOT NULL AND z.chakusa_code1 != ' ' THEN z.chakusa_code1 || '馬身' ELSE '' END ||
-  CASE z.chakusa_code2
-    WHEN 'A' THEN 'ハナ' WHEN 'B' THEN 'アタマ' WHEN 'C' THEN 'クビ'
-    WHEN 'D' THEN '1/2' WHEN 'E' THEN '3/4' WHEN 'F' THEN '1'
-    WHEN 'G' THEN '1.1/4' WHEN 'H' THEN '1.1/2' WHEN 'I' THEN '1.3/4'
-    WHEN 'J' THEN '2' WHEN 'K' THEN '2.1/2' WHEN 'L' THEN '3'
-    WHEN 'M' THEN '3.1/2' WHEN 'N' THEN '4' WHEN 'O' THEN '5'
-    WHEN 'P' THEN '6' WHEN 'Q' THEN '7' WHEN 'R' THEN '8'
-    WHEN 'S' THEN '9' WHEN 'T' THEN '10' WHEN 'U' THEN '大差'
-    ELSE ''
-  END AS chakusa_label,
+  NULLIF(
+    CASE
+      WHEN z.chakusa_code1 IS NOT NULL AND z.chakusa_code1 != ' '
+      THEN CAST(SAFE_CAST(z.chakusa_code1 AS INT64) AS STRING) || '馬身'
+      ELSE ''
+    END ||
+    CASE z.chakusa_code2
+      WHEN '0' THEN 'ハナ'
+      WHEN '1' THEN 'アタマ'
+      WHEN '2' THEN 'クビ'
+      WHEN '3' THEN '1/2'
+      WHEN '4' THEN '1/4'
+      WHEN '5' THEN '3/4'
+      WHEN '7' THEN '大差'
+      WHEN '8' THEN '同着'
+      ELSE ''
+    END,
+  '') AS chakusa_label,
   z.time_sa,
   SAFE_CAST(z.time_sa AS FLOAT64) / 10 AS time_sa_float,
   z.zenhan_3f,
@@ -551,15 +586,34 @@ CASE z.chokyoshi_shozokubasho_code
   z.kohan_3f,
   SAFE_CAST(z.kohan_3f AS FLOAT64) / 10 AS kohan_3f_float,
   z.corner1_juni,
-  CASE WHEN SAFE_CAST(z.corner1_juni AS INT64) IS NULL THEN z.corner1_juni ELSE LPAD(z.corner1_juni, 2, '0') END AS corner1_juni_label,
+  CASE
+    WHEN SAFE_CAST(z.corner1_juni AS INT64) IS NULL THEN z.corner1_juni
+    ELSE LPAD(z.corner1_juni, 2, '0')
+  END AS corner1_juni_label,
   z.corner2_juni,
-  CASE WHEN SAFE_CAST(z.corner2_juni AS INT64) IS NULL THEN z.corner2_juni ELSE LPAD(z.corner2_juni, 2, '0') END AS corner2_juni_label,
+  CASE
+    WHEN SAFE_CAST(z.corner2_juni AS INT64) IS NULL THEN z.corner2_juni
+    ELSE LPAD(z.corner2_juni, 2, '0')
+  END AS corner2_juni_label,
   z.corner3_juni,
-  CASE WHEN SAFE_CAST(z.corner3_juni AS INT64) IS NULL THEN z.corner3_juni ELSE LPAD(z.corner3_juni, 2, '0') END AS corner3_juni_label,
+  CASE
+    WHEN SAFE_CAST(z.corner3_juni AS INT64) IS NULL THEN z.corner3_juni
+    ELSE LPAD(z.corner3_juni, 2, '0')
+  END AS corner3_juni_label,
   z.corner4_juni,
-  CASE WHEN SAFE_CAST(z.corner4_juni AS INT64) IS NULL THEN z.corner4_juni ELSE LPAD(z.corner4_juni, 2, '0') END AS corner4_juni_label,
+  CASE
+    WHEN SAFE_CAST(z.corner4_juni AS INT64) IS NULL THEN z.corner4_juni
+    ELSE LPAD(z.corner4_juni, 2, '0')
+  END AS corner4_juni_label,
   z.corner4_ichidori,
-  CASE z.corner4_ichidori WHEN '1' THEN '最内' WHEN '2' THEN '内' WHEN '3' THEN '中' WHEN '4' THEN '外' WHEN '5' THEN '大外' ELSE NULL END AS corner4_ichidori_label,
+  CASE z.corner4_ichidori
+    WHEN '1' THEN '最内'
+    WHEN '2' THEN '内'
+    WHEN '3' THEN '中'
+    WHEN '4' THEN '外'
+    WHEN '5' THEN '大外'
+    ELSE NULL
+  END AS corner4_ichidori_label,
   CURRENT_TIMESTAMP() AS created,
   CURRENT_TIMESTAMP() AS modified
 FROM
