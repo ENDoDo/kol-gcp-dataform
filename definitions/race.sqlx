@@ -49,6 +49,15 @@ config {
     kyori: "距離",
     toroku_tosu_num: "登録頭数 整数型",
     torikeshi_tosu_num: "取消頭数 整数型",
+    tenko_code: "天候コード",
+    tenko_code_label: "天候コードラベル (晴, 曇, 雨...)",
+    babajotai_code: "馬場状態コード",
+    babajotai_code_label: "馬場状態ラベル (良, 稍, 重, 不良)",
+    pace_yosou: "ペース(予想)",
+    pace_yosou_label: "ペース(予想) ラベル (H, M, S)",
+    pace_kekka: "ペース(結果)",
+    pace_kekka_label: "ペース(結果) ラベル (H, M, S)",
+    race_tanpyo: "レース短評",
     juryo_handicap_flag: "重量種別が別定または馬齢の場合に「はい」",
     keibajo_komawari_curve4_flag: "競馬場が札幌/函館/福島/小倉かつ距離が1700m以上の場合に「はい」",
     keibajo_omawari_curve4_flag: "指定された競馬場、トラック、距離の組み合わせ条件を満たす場合に「はい」",
@@ -243,6 +252,40 @@ SELECT
   SAFE_CAST(d1.kyori AS INT64) AS kyori,
   SAFE_CAST(d1.toroku_tosu AS INT64) AS toroku_tosu_num,
   SAFE_CAST(d1.torikeshi_tosu AS INT64) AS torikeshi_tosu_num,
+  s1.tenko_code,
+  CASE s1.tenko_code
+    WHEN '0' THEN '晴'
+    WHEN '1' THEN '曇'
+    WHEN '2' THEN '雨'
+    WHEN '3' THEN '小雨'
+    WHEN '4' THEN '雪'
+    WHEN '5' THEN '風'
+    WHEN '6' THEN '小雪'
+    ELSE NULL
+  END AS tenko_code_label,
+  s1.babajotai_code,
+  CASE s1.babajotai_code
+    WHEN '0' THEN '良'
+    WHEN '1' THEN '稍'
+    WHEN '2' THEN '重'
+    WHEN '3' THEN '不良'
+    ELSE NULL
+  END AS babajotai_code_label,
+  d1.pace AS pace_yosou,
+  CASE d1.pace
+    WHEN '0' THEN 'H'
+    WHEN '1' THEN 'M'
+    WHEN '2' THEN 'S'
+    ELSE NULL
+  END AS pace_yosou_label,
+  s1.pace AS pace_kekka,
+  CASE s1.pace
+    WHEN '0' THEN 'H'
+    WHEN '1' THEN 'M'
+    WHEN '2' THEN 'S'
+    ELSE NULL
+  END AS pace_kekka_label,
+  d1.race_tanpyo,
   CASE
     WHEN d1.bettei_barei_handicap_summary_code IN ('00', '01') THEN 'はい'
     ELSE 'いいえ'
