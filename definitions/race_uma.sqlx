@@ -457,7 +457,7 @@ SELECT
   SAFE.PARSE_DATE('%Y%m%d', z.chokyo_nengappi) AS chokyo_date,
   z.chokyo_basho,
   z.chokyo_course,
-  CONCAT(z.chokyo_basho, z.chokyo_course) AS chokyo_basho_course_label,
+  COALESCE(z.chokyo_basho, '') || COALESCE(z.chokyo_course, '') AS chokyo_basho_course_label,
   z.chokyo_babajotai,
   z.chokyo_1f,
   z.chokyo_3f,

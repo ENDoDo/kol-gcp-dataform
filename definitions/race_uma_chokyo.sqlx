@@ -112,7 +112,7 @@ SELECT
   SAFE.PARSE_DATE('%Y%m%d', den2.chokyo1_nengappi) AS chokyo_nengappi_date,
   den2.chokyo1_basho AS chokyo_basho,
   den2.chokyo1_course AS chokyo_course,
-  CONCAT(den2.chokyo1_basho, den2.chokyo1_course) AS chokyo_basho_course_label,
+  COALESCE(den2.chokyo1_basho, '') || COALESCE(den2.chokyo1_course, '') AS chokyo_basho_course_label,
   den2.chokyo1_babajotai AS chokyo_babajotai,
   -- hanro_pool_kaisu: 指示に基づき 坂路/プール の場合は chokyo1_6f をセット
   CASE
@@ -316,7 +316,7 @@ SELECT
   SAFE.PARSE_DATE('%Y%m%d', den2.chokyo2_nengappi) AS chokyo_nengappi_date,
   den2.chokyo2_basho AS chokyo_basho,
   den2.chokyo2_course AS chokyo_course,
-  CONCAT(den2.chokyo2_basho, den2.chokyo2_course) AS chokyo_basho_course_label,
+  COALESCE(den2.chokyo2_basho, '') || COALESCE(den2.chokyo2_course, '') AS chokyo_basho_course_label,
   den2.chokyo2_babajotai AS chokyo_babajotai,
   -- hanro_pool_kaisu
   CASE
@@ -520,7 +520,7 @@ SELECT
   SAFE.PARSE_DATE('%Y%m%d', den2.chokyo3_nengappi) AS chokyo_nengappi_date,
   den2.chokyo3_basho AS chokyo_basho,
   den2.chokyo3_course AS chokyo_course,
-  CONCAT(den2.chokyo3_basho, den2.chokyo3_course) AS chokyo_basho_course_label,
+  COALESCE(den2.chokyo3_basho, '') || COALESCE(den2.chokyo3_course, '') AS chokyo_basho_course_label,
   den2.chokyo3_babajotai AS chokyo_babajotai,
   -- hanro_pool_kaisu
   CASE
