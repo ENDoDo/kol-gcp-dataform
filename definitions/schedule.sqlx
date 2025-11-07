@@ -1,3 +1,8 @@
+-- =================================================================
+-- schedule.sqlx
+-- 説明: kol_den1から発走日に関する情報を抽出し、整形するテーブル。
+-- =================================================================
+
 config {
   type: "table",
   description: "KOLの出馬表データ(den1)を元に、発走日に関する情報を整形したマスターテーブル。",
@@ -12,16 +17,25 @@ config {
   }
 }
 
+-- kol_den1テーブルから開催年月日を抽出し、各種日付形式に変換する
 SELECT
+  -- 発走日（YYYYMMDD）
   kaisai_nengappi AS id,
+  -- 発走年（YYYY）
   SUBSTR(kaisai_nengappi, 1, 4) AS year,
+  -- 発走月日（MMDD）
   SUBSTR(kaisai_nengappi, 5, 4) AS month_day,
+  -- 期間開始日時（YYYY-MM-DD 00:00:00）
   PARSE_TIMESTAMP('%Y%m%d %H:%M:%S', kaisai_nengappi || ' 00:00:00') AS period1_start,
+  -- 期間終了日時（YYYY-MM-DD 23:59:59）
   PARSE_TIMESTAMP('%Y%m%d %H:%M:%S', kaisai_nengappi || ' 23:59:59') AS period2_end,
+  -- データ更新日時
   CURRENT_TIMESTAMP() AS modified,
+  -- データ作成日時
   CURRENT_TIMESTAMP() AS created
 FROM
   ${ref("kol_den1")}
+-- 発走日ごとにグループ化
 GROUP BY
   id,
   year,
