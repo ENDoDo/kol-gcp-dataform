@@ -712,8 +712,14 @@ SELECT
   SAFE_CAST(z.tansho_ninkijun AS INT64) AS tansho_ninkijun_num,
   z.tansho_odds,
   SAFE_CAST(z.tansho_odds AS FLOAT64) / 10 AS tansho_odds_float,
-  z.kakutei_chakujun,
-  SAFE_CAST(z.kakutei_chakujun AS INT64) AS kakutei_chakujun_num,
+  CASE
+    WHEN SAFE_CAST(z.kakutei_chakujun AS INT64) > 5 THEN CAST(0 AS STRING)
+    ELSE z.kakutei_chakujun
+  END AS kakutei_chakujun,
+  CASE
+    WHEN SAFE_CAST(z.kakutei_chakujun AS INT64) > 5 THEN 0
+    ELSE SAFE_CAST(z.kakutei_chakujun AS INT64)
+  END AS kakutei_chakujun_num,
   CASE
     WHEN z.tansho3_umaban IS NOT NULL THEN z.tansho3_haraimodoshikin
     WHEN z.tansho2_umaban IS NOT NULL THEN z.tansho2_haraimodoshikin
