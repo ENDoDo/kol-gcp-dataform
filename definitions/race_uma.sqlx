@@ -588,10 +588,10 @@ SELECT
   z.chokyo_reigai,
   z.chokyo_awase,
   CASE
-    WHEN z.chokyo_awase LIKE '%同入%' THEN '同入'
-    WHEN z.chokyo_awase LIKE '%遅れ%' THEN '遅れ'
-    WHEN z.chokyo_awase LIKE '%先着%' THEN '先着'
-    ELSE NULL
+    WHEN z.chokyo_awase LIKE '%同入%' THEN '併せ同入'
+    WHEN z.chokyo_awase LIKE '%遅れ%' THEN '併せ遅れ'
+    WHEN z.chokyo_awase LIKE '%先着%' THEN '併せ先着'
+    ELSE '単走'
   END AS chokyo_awase_kubun,
   z.chokyo_awase_flag,
   CASE z.chokyo_awase_flag
