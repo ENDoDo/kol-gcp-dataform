@@ -116,107 +116,100 @@ SELECT
   den2.chokyo1_babajotai AS chokyo_babajotai,
   -- hanro_pool_kaisu: 指示に基づき 坂路/プール の場合は chokyo1_6f をセット
   CASE
-    WHEN den2.chokyo1_course = 'H' THEN den2.chokyo1_6f
-    WHEN den2.chokyo1_course = 'L' THEN den2.chokyo1_6f
+    WHEN den2.chokyo1_course = '坂' THEN den2.chokyo1_6f
+    WHEN den2.chokyo1_course = 'P' THEN den2.chokyo1_6f
     ELSE NULL
   END AS hanro_pool_kaisu,
-  -- chokyo_8f: 坂路/プール ('H', 'L') では NULL
+  -- chokyo_8f：坂:null 、P:null それ以外:chokyo_8f
   CASE
-    WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
+    WHEN den2.chokyo1_course IN ('坂', 'P') THEN NULL
     ELSE den2.chokyo1_8f
   END AS chokyo_8f,
   SAFE_CAST(
-    (
-      CASE
-        WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
-        ELSE den2.chokyo1_8f
-      END
-    ) AS FLOAT64
+    CASE
+      WHEN den2.chokyo1_course IN ('坂', 'P') THEN NULL
+      ELSE den2.chokyo1_8f
+    END AS FLOAT64
   ) AS chokyo_8f_float,
-  -- chokyo_7f: 坂路/プール ('H', 'L') では NULL
+
+  -- chokyo_7f：坂:null 、P:null それ以外:chokyo_7f
   CASE
-    WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
+    WHEN den2.chokyo1_course IN ('坂', 'P') THEN NULL
     ELSE den2.chokyo1_7f
   END AS chokyo_7f,
   SAFE_CAST(
-    (
-      CASE
-        WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
-        ELSE den2.chokyo1_7f
-      END
-    ) AS FLOAT64
+    CASE
+      WHEN den2.chokyo1_course IN ('坂', 'P') THEN NULL
+      ELSE den2.chokyo1_7f
+    END AS FLOAT64
   ) AS chokyo_7f_float,
-  -- chokyo_6f: 坂路/プール ('H', 'L') では NULL
+
+  -- chokyo_6f：坂:null 、P:null それ以外:chokyo_6f
   CASE
-    WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
+    WHEN den2.chokyo1_course IN ('坂', 'P') THEN NULL
     ELSE den2.chokyo1_6f
   END AS chokyo_6f,
   SAFE_CAST(
-    (
-      CASE
-        WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
-        ELSE den2.chokyo1_6f
-      END
-    ) AS FLOAT64
+    CASE
+      WHEN den2.chokyo1_course IN ('坂', 'P') THEN NULL
+      ELSE den2.chokyo1_6f
+    END AS FLOAT64
   ) AS chokyo_6f_float,
-  -- chokyo_5f: 坂路/プール ('H', 'L') では NULL, それ以外は chokyo1_4f を使用 (指示通り)
+
+  -- chokyo_5f：坂:chokyo_5f 、P:null それ以外:chokyo_5f
   CASE
-    WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
-    ELSE den2.chokyo1_4f
+    WHEN den2.chokyo1_course = 'P' THEN NULL
+    ELSE den2.chokyo1_5f
   END AS chokyo_5f,
   SAFE_CAST(
-    (
-      CASE
-        WHEN den2.chokyo1_course IN ('H', 'L') THEN NULL
-        ELSE den2.chokyo1_4f
-      END
-    ) AS FLOAT64
+    CASE
+      WHEN den2.chokyo1_course = 'P' THEN NULL
+      ELSE den2.chokyo1_5f
+    END AS FLOAT64
   ) AS chokyo_5f_float,
-  -- chokyo_4f: 坂路 ('H') では chokyo1_5f, プール ('L') では NULL, それ以外は chokyo1_4f
+
+  -- chokyo_4f：坂:chokyo_4f 、P:null それ以外:chokyo_4f
   CASE
-    WHEN den2.chokyo1_course = 'H' THEN den2.chokyo1_5f
-    WHEN den2.chokyo1_course = 'L' THEN NULL
+    WHEN den2.chokyo1_course = 'P' THEN NULL
     ELSE den2.chokyo1_4f
   END AS chokyo_4f,
   SAFE_CAST(
-    (
-      CASE
-        WHEN den2.chokyo1_course = 'H' THEN den2.chokyo1_5f
-        WHEN den2.chokyo1_course = 'L' THEN NULL
-        ELSE den2.chokyo1_4f
-      END
-    ) AS FLOAT64
+    CASE
+      WHEN den2.chokyo1_course = 'P' THEN NULL
+      ELSE den2.chokyo1_4f
+    END AS FLOAT64
   ) AS chokyo_4f_float,
-  -- chokyo_3f: 坂路 ('H') では chokyo1_4f, プール ('L') では NULL, それ以外は chokyo1_3f
+
+  -- chokyo_3f：坂:chokyo_4f 、P:null それ以外:chokyo_3f
   CASE
-    WHEN den2.chokyo1_course = 'H' THEN den2.chokyo1_4f
-    WHEN den2.chokyo1_course = 'L' THEN NULL
+    WHEN den2.chokyo1_course = '坂' THEN den2.chokyo1_4f -- 坂路はchokyo1_4fを3Fとして使用
+    WHEN den2.chokyo1_course = 'P' THEN NULL
     ELSE den2.chokyo1_3f
   END AS chokyo_3f,
   SAFE_CAST(
-    (
-      CASE
-        WHEN den2.chokyo1_course = 'H' THEN den2.chokyo1_4f
-        WHEN den2.chokyo1_course = 'L' THEN NULL
-        ELSE den2.chokyo1_3f
-      END
-    ) AS FLOAT64
+    CASE
+      WHEN den2.chokyo1_course = '坂' THEN den2.chokyo1_4f
+      WHEN den2.chokyo1_course = 'P' THEN NULL
+      ELSE den2.chokyo1_3f
+    END AS FLOAT64
   ) AS chokyo_3f_float,
-  -- chokyo_2f_float: 坂路 ('H') では chokyo1_3f, プール ('L') では NULL, それ以外は推定 (3F - (4F-3F))
+
+  -- chokyo_2f_float：坂:chokyo_3f (chokyo1_4f) 、P:null それ以外:3F-(4F-3F)
   CASE
-    WHEN den2.chokyo1_course = 'H' THEN SAFE_CAST(den2.chokyo1_3f AS FLOAT64)
-    WHEN den2.chokyo1_course = 'L' THEN NULL
-    ELSE (
-      2.0 * SAFE_CAST(den2.chokyo1_3f AS FLOAT64) - SAFE_CAST(den2.chokyo1_4f AS FLOAT64)
-    )
+    WHEN den2.chokyo1_course = 'P' THEN NULL
+    WHEN den2.chokyo1_course = '坂' THEN
+        SAFE_CAST(den2.chokyo1_4f AS FLOAT64) - (SAFE_CAST(den2.chokyo1_5f AS FLOAT64) - SAFE_CAST(den2.chokyo1_4f AS FLOAT64))
+    ELSE
+      SAFE_CAST(den2.chokyo1_3f AS FLOAT64) - (SAFE_CAST(den2.chokyo1_4f AS FLOAT64) - SAFE_CAST(den2.chokyo1_3f AS FLOAT64))
   END AS chokyo_2f_float,
-  -- chokyo_1f: プール ('L') では NULL
+
+  -- chokyo_1f：chokyo_1f / chokyo_1f_float：場所プール:null chokyo_1f
   CASE
-    WHEN den2.chokyo1_course = 'L' THEN NULL
+    WHEN den2.chokyo1_course = 'P' THEN NULL
     ELSE den2.chokyo1_1f
   END AS chokyo_1f,
   CASE
-    WHEN den2.chokyo1_course = 'L' THEN NULL
+    WHEN den2.chokyo1_course = 'P' THEN NULL
     ELSE SAFE_CAST(den2.chokyo1_1f AS FLOAT64)
   END AS chokyo_1f_float,
   den2.chokyo1_ichidori AS chokyo_ichidori,
@@ -320,107 +313,100 @@ SELECT
   den2.chokyo2_babajotai AS chokyo_babajotai,
   -- hanro_pool_kaisu
   CASE
-    WHEN den2.chokyo2_course = 'H' THEN den2.chokyo2_6f
-    WHEN den2.chokyo2_course = 'L' THEN den2.chokyo2_6f
+    WHEN den2.chokyo2_course = '坂' THEN den2.chokyo2_6f
+    WHEN den2.chokyo2_course = 'P' THEN den2.chokyo2_6f
     ELSE NULL
   END AS hanro_pool_kaisu,
-  -- chokyo_8f
+  -- chokyo_8f：坂:null 、P:null それ以外:chokyo_8f
   CASE
-    WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
+    WHEN den2.chokyo2_course IN ('坂', 'P') THEN NULL
     ELSE den2.chokyo2_8f
   END AS chokyo_8f,
   SAFE_CAST(
-    (
-      CASE
-        WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
-        ELSE den2.chokyo2_8f
-      END
-    ) AS FLOAT64
+    CASE
+      WHEN den2.chokyo2_course IN ('坂', 'P') THEN NULL
+      ELSE den2.chokyo2_8f
+    END AS FLOAT64
   ) AS chokyo_8f_float,
-  -- chokyo_7f
+
+  -- chokyo_7f：坂:null 、P:null それ以外:chokyo_7f
   CASE
-    WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
+    WHEN den2.chokyo2_course IN ('坂', 'P') THEN NULL
     ELSE den2.chokyo2_7f
   END AS chokyo_7f,
   SAFE_CAST(
-    (
-      CASE
-        WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
-        ELSE den2.chokyo2_7f
-      END
-    ) AS FLOAT64
+    CASE
+      WHEN den2.chokyo2_course IN ('坂', 'P') THEN NULL
+      ELSE den2.chokyo2_7f
+    END AS FLOAT64
   ) AS chokyo_7f_float,
-  -- chokyo_6f
+
+  -- chokyo_6f：坂:null 、P:null それ以外:chokyo_6f
   CASE
-    WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
+    WHEN den2.chokyo2_course IN ('坂', 'P') THEN NULL
     ELSE den2.chokyo2_6f
   END AS chokyo_6f,
   SAFE_CAST(
-    (
-      CASE
-        WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
-        ELSE den2.chokyo2_6f
-      END
-    ) AS FLOAT64
+    CASE
+      WHEN den2.chokyo2_course IN ('坂', 'P') THEN NULL
+      ELSE den2.chokyo2_6f
+    END AS FLOAT64
   ) AS chokyo_6f_float,
-  -- chokyo_5f
+
+  -- chokyo_5f：坂:chokyo_5f 、P:null それ以外:chokyo_5f
   CASE
-    WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
-    ELSE den2.chokyo2_4f
+    WHEN den2.chokyo2_course = 'P' THEN NULL
+    ELSE den2.chokyo2_5f
   END AS chokyo_5f,
   SAFE_CAST(
-    (
-      CASE
-        WHEN den2.chokyo2_course IN ('H', 'L') THEN NULL
-        ELSE den2.chokyo2_4f
-      END
-    ) AS FLOAT64
+    CASE
+      WHEN den2.chokyo2_course = 'L' THEN NULL
+      ELSE den2.chokyo2_5f
+    END AS FLOAT64
   ) AS chokyo_5f_float,
-  -- chokyo_4f
+
+  -- chokyo_4f：坂:chokyo_4f 、P:null それ以外:chokyo_4f
   CASE
-    WHEN den2.chokyo2_course = 'H' THEN den2.chokyo2_5f
-    WHEN den2.chokyo2_course = 'L' THEN NULL
+    WHEN den2.chokyo2_course = 'P' THEN NULL
     ELSE den2.chokyo2_4f
   END AS chokyo_4f,
   SAFE_CAST(
-    (
-      CASE
-        WHEN den2.chokyo2_course = 'H' THEN den2.chokyo2_5f
-        WHEN den2.chokyo2_course = 'L' THEN NULL
-        ELSE den2.chokyo2_4f
-      END
-    ) AS FLOAT64
+    CASE
+      WHEN den2.chokyo2_course = 'P' THEN NULL
+      ELSE den2.chokyo2_4f
+    END AS FLOAT64
   ) AS chokyo_4f_float,
-  -- chokyo_3f
+
+  -- chokyo_3f：坂:chokyo_4f 、P:null それ以外:chokyo_3f
   CASE
-    WHEN den2.chokyo2_course = 'H' THEN den2.chokyo2_4f
-    WHEN den2.chokyo2_course = 'L' THEN NULL
+    WHEN den2.chokyo2_course = '坂' THEN den2.chokyo2_4f
+    WHEN den2.chokyo2_course = 'P' THEN NULL
     ELSE den2.chokyo2_3f
   END AS chokyo_3f,
   SAFE_CAST(
-    (
-      CASE
-        WHEN den2.chokyo2_course = 'H' THEN den2.chokyo2_4f
-        WHEN den2.chokyo2_course = 'L' THEN NULL
-        ELSE den2.chokyo2_3f
-      END
-    ) AS FLOAT64
+    CASE
+      WHEN den2.chokyo2_course = '坂' THEN den2.chokyo2_4f
+      WHEN den2.chokyo2_course = 'P' THEN NULL
+      ELSE den2.chokyo2_3f
+    END AS FLOAT64
   ) AS chokyo_3f_float,
-  -- chokyo_2f_float
+
+  -- chokyo_2f_float：坂:chokyo_3f (chokyo2_4f) 、P:null それ以外:3F-(4F-3F)
   CASE
-    WHEN den2.chokyo2_course = 'H' THEN SAFE_CAST(den2.chokyo2_3f AS FLOAT64)
-    WHEN den2.chokyo2_course = 'L' THEN NULL
-    ELSE (
-      2.0 * SAFE_CAST(den2.chokyo2_3f AS FLOAT64) - SAFE_CAST(den2.chokyo2_4f AS FLOAT64)
-    )
+    WHEN den2.chokyo2_course = 'P' THEN NULL
+    WHEN den2.chokyo2_course = '坂' THEN
+        SAFE_CAST(den2.chokyo2_4f AS FLOAT64) - (SAFE_CAST(den2.chokyo2_5f AS FLOAT64) - SAFE_CAST(den2.chokyo2_4f AS FLOAT64))
+    ELSE
+      SAFE_CAST(den2.chokyo2_3f AS FLOAT64) - (SAFE_CAST(den2.chokyo2_4f AS FLOAT64) - SAFE_CAST(den2.chokyo2_3f AS FLOAT64))
   END AS chokyo_2f_float,
-  -- chokyo_1f
+
+  -- chokyo_1f：chokyo_1f / chokyo_1f_float：場所プール:null chokyo_1f
   CASE
-    WHEN den2.chokyo2_course = 'L' THEN NULL
+    WHEN den2.chokyo2_course = 'P' THEN NULL
     ELSE den2.chokyo2_1f
   END AS chokyo_1f,
   CASE
-    WHEN den2.chokyo2_course = 'L' THEN NULL
+    WHEN den2.chokyo2_course = 'P' THEN NULL
     ELSE SAFE_CAST(den2.chokyo2_1f AS FLOAT64)
   END AS chokyo_1f_float,
   den2.chokyo2_ichidori AS chokyo_ichidori,
@@ -524,107 +510,100 @@ SELECT
   den2.chokyo3_babajotai AS chokyo_babajotai,
   -- hanro_pool_kaisu
   CASE
-    WHEN den2.chokyo3_course = 'H' THEN den2.chokyo3_6f
-    WHEN den2.chokyo3_course = 'L' THEN den2.chokyo3_6f
+    WHEN den2.chokyo3_course = '坂' THEN den2.chokyo3_6f
+    WHEN den2.chokyo3_course = 'P' THEN den2.chokyo3_6f
     ELSE NULL
   END AS hanro_pool_kaisu,
-  -- chokyo_8f
+  -- chokyo_8f：坂:null 、P:null それ以外:chokyo_8f
   CASE
-    WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
+    WHEN den2.chokyo3_course IN ('坂', 'P') THEN NULL
     ELSE den2.chokyo3_8f
   END AS chokyo_8f,
   SAFE_CAST(
-    (
-      CASE
-        WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
-        ELSE den2.chokyo3_8f
-      END
-    ) AS FLOAT64
+    CASE
+      WHEN den2.chokyo3_course IN ('坂', 'P') THEN NULL
+      ELSE den2.chokyo3_8f
+    END AS FLOAT64
   ) AS chokyo_8f_float,
-  -- chokyo_7f
+
+  -- chokyo_7f：坂:null 、P:null それ以外:chokyo_7f
   CASE
-    WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
+    WHEN den2.chokyo3_course IN ('坂', 'P') THEN NULL
     ELSE den2.chokyo3_7f
   END AS chokyo_7f,
   SAFE_CAST(
-    (
-      CASE
-        WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
-        ELSE den2.chokyo3_7f
-      END
-    ) AS FLOAT64
+    CASE
+      WHEN den2.chokyo3_course IN ('坂', 'P') THEN NULL
+      ELSE den2.chokyo3_7f
+    END AS FLOAT64
   ) AS chokyo_7f_float,
-  -- chokyo_6f
+
+  -- chokyo_6f：坂:null 、P:null それ以外:chokyo_6f
   CASE
-    WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
+    WHEN den2.chokyo3_course IN ('坂', 'P') THEN NULL
     ELSE den2.chokyo3_6f
   END AS chokyo_6f,
   SAFE_CAST(
-    (
-      CASE
-        WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
-        ELSE den2.chokyo3_6f
-      END
-    ) AS FLOAT64
+    CASE
+      WHEN den2.chokyo3_course IN ('坂', 'P') THEN NULL
+      ELSE den2.chokyo3_6f
+    END AS FLOAT64
   ) AS chokyo_6f_float,
-  -- chokyo_5f
+
+  -- chokyo_5f：坂:chokyo_5f 、P:null それ以外:chokyo_5f
   CASE
-    WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
-    ELSE den2.chokyo3_4f
+    WHEN den2.chokyo3_course = 'P' THEN NULL
+    ELSE den2.chokyo3_5f
   END AS chokyo_5f,
   SAFE_CAST(
-    (
-      CASE
-        WHEN den2.chokyo3_course IN ('H', 'L') THEN NULL
-        ELSE den2.chokyo3_4f
-      END
-    ) AS FLOAT64
+    CASE
+      WHEN den2.chokyo3_course = 'L' THEN NULL
+      ELSE den2.chokyo3_5f
+    END AS FLOAT64
   ) AS chokyo_5f_float,
-  -- chokyo_4f
+
+  -- chokyo_4f：坂:chokyo_4f 、P:null それ以外:chokyo_4f
   CASE
-    WHEN den2.chokyo3_course = 'H' THEN den2.chokyo3_5f
-    WHEN den2.chokyo3_course = 'L' THEN NULL
+    WHEN den2.chokyo3_course = 'P' THEN NULL
     ELSE den2.chokyo3_4f
   END AS chokyo_4f,
   SAFE_CAST(
-    (
-      CASE
-        WHEN den2.chokyo3_course = 'H' THEN den2.chokyo3_5f
-        WHEN den2.chokyo3_course = 'L' THEN NULL
-        ELSE den2.chokyo3_4f
-      END
-    ) AS FLOAT64
+    CASE
+      WHEN den2.chokyo3_course = 'P' THEN NULL
+      ELSE den2.chokyo3_4f
+    END AS FLOAT64
   ) AS chokyo_4f_float,
-  -- chokyo_3f
+
+  -- chokyo_3f：坂:chokyo_4f 、P:null それ以外:chokyo_3f
   CASE
-    WHEN den2.chokyo3_course = 'H' THEN den2.chokyo3_4f
-    WHEN den2.chokyo3_course = 'L' THEN NULL
+    WHEN den2.chokyo3_course = '坂' THEN den2.chokyo3_4f
+    WHEN den2.chokyo3_course = 'P' THEN NULL
     ELSE den2.chokyo3_3f
   END AS chokyo_3f,
   SAFE_CAST(
-    (
-      CASE
-        WHEN den2.chokyo3_course = 'H' THEN den2.chokyo3_4f
-        WHEN den2.chokyo3_course = 'L' THEN NULL
-        ELSE den2.chokyo3_3f
-      END
-    ) AS FLOAT64
+    CASE
+      WHEN den2.chokyo3_course = '坂' THEN den2.chokyo3_4f
+      WHEN den2.chokyo3_course = 'P' THEN NULL
+      ELSE den2.chokyo3_3f
+    END AS FLOAT64
   ) AS chokyo_3f_float,
-  -- chokyo_2f_float
+
+  -- chokyo_2f_float：坂:chokyo_3f (chokyo3_4f) 、P:null それ以外:3F-(4F-3F)
   CASE
-    WHEN den2.chokyo3_course = 'H' THEN SAFE_CAST(den2.chokyo3_3f AS FLOAT64)
-    WHEN den2.chokyo3_course = 'L' THEN NULL
-    ELSE (
-      2.0 * SAFE_CAST(den2.chokyo3_3f AS FLOAT64) - SAFE_CAST(den2.chokyo3_4f AS FLOAT64)
-    )
+    WHEN den2.chokyo3_course = 'P' THEN NULL
+    WHEN den2.chokyo3_course = '坂' THEN
+        SAFE_CAST(den2.chokyo3_4f AS FLOAT64) - (SAFE_CAST(den2.chokyo3_5f AS FLOAT64) - SAFE_CAST(den2.chokyo3_4f AS FLOAT64))
+    ELSE
+      SAFE_CAST(den2.chokyo3_3f AS FLOAT64) - (SAFE_CAST(den2.chokyo3_4f AS FLOAT64) - SAFE_CAST(den2.chokyo3_3f AS FLOAT64))
   END AS chokyo_2f_float,
-  -- chokyo_1f
+
+  -- chokyo_1f：chokyo_1f / chokyo_1f_float：場所プール:null chokyo_1f
   CASE
-    WHEN den2.chokyo3_course = 'L' THEN NULL
+    WHEN den2.chokyo3_course = 'P' THEN NULL
     ELSE den2.chokyo3_1f
   END AS chokyo_1f,
   CASE
-    WHEN den2.chokyo3_course = 'L' THEN NULL
+    WHEN den2.chokyo3_course = 'P' THEN NULL
     ELSE SAFE_CAST(den2.chokyo3_1f AS FLOAT64)
   END AS chokyo_1f_float,
   den2.chokyo3_ichidori AS chokyo_ichidori,

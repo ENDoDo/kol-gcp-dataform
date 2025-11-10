@@ -79,13 +79,21 @@ config {
     chokyo_course: "調教コース",
     chokyo_basho_course_label: "調教場所とコースを結合したラベル",
     chokyo_babajotai: "調教馬場状態",
+    chokyo_8f: "調教タイム 8F",
+    chokyo_8f_float: "調教タイム 8F (小数点)",
+    chokyo_7f: "調教タイム 7F",
+    chokyo_7f_float: "調教タイム 7F (小数点)",
+    chokyo_6f: "調教タイム 6F",
+    chokyo_6f_float: "調教タイム 6F (小数点)",
+    chokyo_5f: "調教タイム 5F",
+    chokyo_5f_float: "調教タイム 5F (小数点)",
+    chokyo_4f: "調教タイム 4F",
+    chokyo_4f_float: "調教タイム 4F (小数点)",
+    chokyo_3f: "調教タイム 3F",
+    chokyo_3f_float: "調教タイム 3F (小数点)",
+    chokyo_2f_float: "調教タイム 2F推定値 (小数点)",
     chokyo_1f: "調教タイム 1F",
-    chokyo_3f: "調教タイム 3F",
-    chokyo_4f: "調教タイム 4F",
-    chokyo_5f: "調教タイム 5F",
-    chokyo_6f: "調教タイム 6F",
-    chokyo_7f: "調教タイム 7F",
-    chokyo_8f: "調教タイム 8F",
+    chokyo_1f_float: "調教タイム 1F (小数点)",
     chokyo_ichidori: "調教位置取り",
     chokyo_ashiiro: "調教脚色",
     chokyo_ashiiro_label: "調教脚色(ラベル)",
@@ -276,13 +284,13 @@ WITH
       s2.chokyo_basho,
       s2.chokyo_course,
       s2.chokyo_babajotai,
-      s2.chokyo_8f,
-      s2.chokyo_7f,
-      s2.chokyo_6f,
-      s2.chokyo_5f,
-      s2.chokyo_4f,
-      s2.chokyo_3f,
-      s2.chokyo_1f,
+      s2.chokyo_8f AS chokyo_8f_d2,
+      s2.chokyo_7f AS chokyo_7f_d2,
+      s2.chokyo_6f AS chokyo_6f_d2,
+      s2.chokyo_5f AS chokyo_5f_d2,
+      s2.chokyo_4f AS chokyo_4f_d2,
+      s2.chokyo_3f AS chokyo_3f_d2,
+      s2.chokyo_1f AS chokyo_1f_d2,
       s2.chokyo_ichidori,
       s2.chokyo_ashiiro,
       s2.chokyo_yajirushi,
@@ -459,13 +467,77 @@ SELECT
   z.chokyo_course,
   COALESCE(z.chokyo_basho, '') || COALESCE(z.chokyo_course, '') AS chokyo_basho_course_label,
   z.chokyo_babajotai,
-  z.chokyo_1f,
-  z.chokyo_3f,
-  z.chokyo_4f,
-  z.chokyo_5f,
-  z.chokyo_6f,
-  z.chokyo_7f,
-  z.chokyo_8f,
+  -- 調教タイム関連フィールド (chokyo_course の略語 '坂', 'P' を使用)
+  CASE
+    WHEN z.chokyo_course IN ('坂', 'P') THEN NULL
+    ELSE z.chokyo_8f_d2
+  END AS chokyo_8f,
+  CASE
+    WHEN z.chokyo_course IN ('坂', 'P') THEN NULL
+    ELSE SAFE_CAST(z.chokyo_8f_d2 AS FLOAT64)
+  END AS chokyo_8f_float,
+
+  CASE
+    WHEN z.chokyo_course IN ('坂', 'P') THEN NULL
+    ELSE z.chokyo_7f_d2
+  END AS chokyo_7f,
+  CASE
+    WHEN z.chokyo_course IN ('坂', 'P') THEN NULL
+    ELSE SAFE_CAST(z.chokyo_7f_d2 AS FLOAT64)
+  END AS chokyo_7f_float,
+
+  CASE
+    WHEN z.chokyo_course IN ('坂', 'P') THEN NULL
+    ELSE z.chokyo_6f_d2
+  END AS chokyo_6f,
+  CASE
+    WHEN z.chokyo_course IN ('坂', 'P') THEN NULL
+    ELSE SAFE_CAST(z.chokyo_6f_d2 AS FLOAT64)
+  END AS chokyo_6f_float,
+
+  CASE
+    WHEN z.chokyo_course = 'P' THEN NULL
+    ELSE z.chokyo_5f_d2 -- 坂路とそれ以外
+  END AS chokyo_5f,
+  CASE
+    WHEN z.chokyo_course = 'P' THEN NULL
+    ELSE SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64)
+  END AS chokyo_5f_float,
+
+  CASE
+    WHEN z.chokyo_course = 'P' THEN NULL
+    ELSE z.chokyo_4f_d2 -- 坂路とそれ以外
+  END AS chokyo_4f,
+  CASE
+    WHEN z.chokyo_course = 'P' THEN NULL
+    ELSE SAFE_CAST(z.chokyo_4f_d2 AS FLOAT64)
+  END AS chokyo_4f_float,
+
+  CASE
+    WHEN z.chokyo_course = '坂' THEN z.chokyo_4f_d2 -- 坂路はchokyo_4fを3Fとして使用
+    WHEN z.chokyo_course = 'P' THEN NULL
+    ELSE z.chokyo_3f_d2 -- それ以外はchokyo_3fをそのまま使用
+  END AS chokyo_3f,
+  CASE
+    WHEN z.chokyo_course = '坂' THEN SAFE_CAST(z.chokyo_4f_d2 AS FLOAT64) -- 坂路はchokyo_4fを3Fとして使用
+    WHEN z.chokyo_course = 'P' THEN NULL
+    ELSE SAFE_CAST(z.chokyo_3f_d2 AS FLOAT64) -- それ以外はchokyo_3fをそのまま使用
+  END AS chokyo_3f_float,
+
+  CASE
+    WHEN z.chokyo_course = 'P' THEN NULL
+    -- 坂路の場合: chokyo_3f (chokyo_4fの値) を使用。 chokyo_4f (chokyo_5fの値) を使用。
+    WHEN z.chokyo_course = '坂' THEN
+      SAFE_CAST(z.chokyo_4f_d2 AS FLOAT64) - (SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64) - SAFE_CAST(z.chokyo_4f_d2 AS FLOAT64))
+    -- それ以外の場合: chokyo_3f の値をそのまま使用。chokyo_4f - chokyo_3f を減算。
+    ELSE SAFE_CAST(z.chokyo_3f_d2 AS FLOAT64) - (SAFE_CAST(z.chokyo_4f_d2 AS FLOAT64) - SAFE_CAST(z.chokyo_3f_d2 AS FLOAT64))
+  END AS chokyo_2f_float,
+
+  z.chokyo_1f_d2 AS chokyo_1f,
+  CASE
+    WHEN z.chokyo_course = 'P' THEN NULL
+    ELSE SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64)
+  END AS chokyo_1f_float,
   z.chokyo_ichidori,
   z.chokyo_ashiiro,
   CASE z.chokyo_ashiiro
