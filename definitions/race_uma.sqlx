@@ -74,6 +74,7 @@ config {
     chokyo_flag: "調教フラグ",
     chokyo_flag_label: "調教フラグ はい/いいえ",
     chokyo_kijosha: "調教騎乗者",
+    chokyo_kijosha_equal_kishumei_flag: "調教騎乗騎手がレースでも騎乗フラグ"
     chokyo_date: "調教年月日",
     chokyo_basho: "調教場所",
     chokyo_course: "調教コース",
@@ -462,6 +463,10 @@ SELECT
     ELSE 'いいえ'
   END AS chokyo_flag_label,
   z.chokyo_kijosha,
+  CASE
+    WHEN TRIM(z.chokyo_kijosha) = TRIM(z.kishumei_ryakusho) THEN 'はい'
+    ELSE 'いいえ'
+  END AS chokyo_kijosha_equal_kishumei_flag,
   SAFE.PARSE_DATE('%Y%m%d', z.chokyo_nengappi) AS chokyo_date,
   z.chokyo_basho,
   z.chokyo_course,
