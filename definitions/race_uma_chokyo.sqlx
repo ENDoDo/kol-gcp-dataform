@@ -195,13 +195,15 @@ SELECT
   ) AS chokyo_3f_float,
 
   -- chokyo_2f_float：坂:chokyo_3f (chokyo1_4f) 、P:null それ以外:3F-(4F-3F)
-  CASE
-    WHEN den2.chokyo1_course = 'P' THEN NULL
-    WHEN den2.chokyo1_course = '坂' THEN
-        SAFE_CAST(den2.chokyo1_4f AS FLOAT64) - (SAFE_CAST(den2.chokyo1_5f AS FLOAT64) - SAFE_CAST(den2.chokyo1_4f AS FLOAT64))
-    ELSE
-      SAFE_CAST(den2.chokyo1_3f AS FLOAT64) - (SAFE_CAST(den2.chokyo1_4f AS FLOAT64) - SAFE_CAST(den2.chokyo1_3f AS FLOAT64))
-  END AS chokyo_2f_float,
+  ROUND(
+    CASE
+      WHEN den2.chokyo1_course = 'P' THEN NULL
+      WHEN den2.chokyo1_course = '坂' THEN
+          SAFE_CAST(den2.chokyo1_4f AS FLOAT64) - (SAFE_CAST(den2.chokyo1_5f AS FLOAT64) - SAFE_CAST(den2.chokyo1_4f AS FLOAT64))
+      ELSE
+        SAFE_CAST(den2.chokyo1_3f AS FLOAT64) - (SAFE_CAST(den2.chokyo1_4f AS FLOAT64) - SAFE_CAST(den2.chokyo1_3f AS FLOAT64))
+    END, 1
+  ) AS chokyo_2f_float,
 
   -- chokyo_1f：chokyo_1f / chokyo_1f_float：場所プール:null chokyo_1f
   CASE
@@ -392,13 +394,15 @@ SELECT
   ) AS chokyo_3f_float,
 
   -- chokyo_2f_float：坂:chokyo_3f (chokyo2_4f) 、P:null それ以外:3F-(4F-3F)
-  CASE
-    WHEN den2.chokyo2_course = 'P' THEN NULL
-    WHEN den2.chokyo2_course = '坂' THEN
-        SAFE_CAST(den2.chokyo2_4f AS FLOAT64) - (SAFE_CAST(den2.chokyo2_5f AS FLOAT64) - SAFE_CAST(den2.chokyo2_4f AS FLOAT64))
-    ELSE
-      SAFE_CAST(den2.chokyo2_3f AS FLOAT64) - (SAFE_CAST(den2.chokyo2_4f AS FLOAT64) - SAFE_CAST(den2.chokyo2_3f AS FLOAT64))
-  END AS chokyo_2f_float,
+  ROUND(
+    CASE
+      WHEN den2.chokyo2_course = 'P' THEN NULL
+      WHEN den2.chokyo2_course = '坂' THEN
+          SAFE_CAST(den2.chokyo2_4f AS FLOAT64) - (SAFE_CAST(den2.chokyo2_5f AS FLOAT64) - SAFE_CAST(den2.chokyo2_4f AS FLOAT64))
+      ELSE
+        SAFE_CAST(den2.chokyo2_3f AS FLOAT64) - (SAFE_CAST(den2.chokyo2_4f AS FLOAT64) - SAFE_CAST(den2.chokyo2_3f AS FLOAT64))
+    END, 1
+  ) AS chokyo_2f_float,
 
   -- chokyo_1f：chokyo_1f / chokyo_1f_float：場所プール:null chokyo_1f
   CASE
@@ -589,13 +593,15 @@ SELECT
   ) AS chokyo_3f_float,
 
   -- chokyo_2f_float：坂:chokyo_3f (chokyo3_4f) 、P:null それ以外:3F-(4F-3F)
-  CASE
-    WHEN den2.chokyo3_course = 'P' THEN NULL
-    WHEN den2.chokyo3_course = '坂' THEN
-        SAFE_CAST(den2.chokyo3_4f AS FLOAT64) - (SAFE_CAST(den2.chokyo3_5f AS FLOAT64) - SAFE_CAST(den2.chokyo3_4f AS FLOAT64))
-    ELSE
-      SAFE_CAST(den2.chokyo3_3f AS FLOAT64) - (SAFE_CAST(den2.chokyo3_4f AS FLOAT64) - SAFE_CAST(den2.chokyo3_3f AS FLOAT64))
-  END AS chokyo_2f_float,
+  ROUND(
+    CASE
+      WHEN den2.chokyo3_course = 'P' THEN NULL
+      WHEN den2.chokyo3_course = '坂' THEN
+          SAFE_CAST(den2.chokyo3_4f AS FLOAT64) - (SAFE_CAST(den2.chokyo3_5f AS FLOAT64) - SAFE_CAST(den2.chokyo3_4f AS FLOAT64))
+      ELSE
+        SAFE_CAST(den2.chokyo3_3f AS FLOAT64) - (SAFE_CAST(den2.chokyo3_4f AS FLOAT64) - SAFE_CAST(den2.chokyo3_3f AS FLOAT64))
+    END, 1
+  ) AS chokyo_2f_float,
 
   -- chokyo_1f：chokyo_1f / chokyo_1f_float：場所プール:null chokyo_1f
   CASE
