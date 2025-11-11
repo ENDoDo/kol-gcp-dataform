@@ -475,7 +475,7 @@ SELECT
   z.chokyo_babajotai,
   -- 調教タイム関連フィールド (chokyo_course の略語 '坂', 'P' を使用)
   CASE
-    WHEN z.chokyo_course IN ('坂', 'P') THEN SAFE_CAST(z.chokyo_6f_d2 AS INT64)
+    WHEN z.chokyo_course IN ('坂', 'P') THEN SAFE_CAST(REGEXP_REPLACE(z.chokyo_6f_d2, r'[^0-9]', '') AS INT64)
     ELSE NULL
   END AS chokyo_hanro_pool_kaisu_int,
   CASE
