@@ -475,24 +475,25 @@ SELECT
   z.chokyo_babajotai,
   -- 調教タイム関連フィールド (chokyo_course の略語 '坂', 'P' を使用)
   CASE
-    WHEN z.chokyo_course IN ('坂', 'P') THEN SAFE_CAST(REGEXP_REPLACE(z.chokyo_6f_d2, r'[^0-9]', '') AS INT64)
+    WHEN z.chokyo_basho = 'プール' OR z.chokyo_course = '坂' THEN SAFE_CAST(REGEXP_REPLACE(z.chokyo_6f_d2, r'[^0-9]', '') AS INT64)
     ELSE NULL
   END AS chokyo_hanro_pool_kaisu_int,
+
   CASE
-    WHEN z.chokyo_course IN ('坂', 'P') THEN NULL
+    WHEN z.chokyo_basho = 'プール' OR z.chokyo_course = '坂' THEN NULL
     ELSE z.chokyo_8f_d2
   END AS chokyo_8f,
   CASE
-    WHEN z.chokyo_course IN ('坂', 'P') THEN NULL
+    WHEN z.chokyo_basho = 'プール' OR z.chokyo_course = '坂' THEN NULL
     ELSE SAFE_CAST(z.chokyo_8f_d2 AS FLOAT64)
   END AS chokyo_8f_float,
 
   CASE
-    WHEN z.chokyo_course IN ('坂', 'P') THEN NULL
+    WHEN z.chokyo_basho = 'プール' OR z.chokyo_course = '坂' THEN NULL
     ELSE z.chokyo_7f_d2
   END AS chokyo_7f,
   CASE
-    WHEN z.chokyo_course IN ('坂', 'P') THEN NULL
+    WHEN z.chokyo_basho = 'プール' OR z.chokyo_course = '坂' THEN NULL
     ELSE SAFE_CAST(z.chokyo_7f_d2 AS FLOAT64)
   END AS chokyo_7f_float,
 
@@ -500,37 +501,37 @@ SELECT
   SAFE_CAST(z.chokyo_6f_d2 AS FLOAT64) AS chokyo_6f_float,
 
   CASE
-    WHEN z.chokyo_course = 'P' THEN NULL
+    WHEN z.chokyo_basho = 'プール' THEN NULL
     ELSE z.chokyo_5f_d2 -- 坂路とそれ以外
   END AS chokyo_5f,
   CASE
-    WHEN z.chokyo_course = 'P' THEN NULL
+    WHEN z.chokyo_basho = 'プール' THEN NULL
     ELSE SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64)
   END AS chokyo_5f_float,
 
   CASE
-    WHEN z.chokyo_course = 'P' THEN NULL
+    WHEN z.chokyo_basho = 'プール' THEN NULL
     ELSE z.chokyo_4f_d2 -- 坂路とそれ以外
   END AS chokyo_4f,
   CASE
-    WHEN z.chokyo_course = 'P' THEN NULL
+    WHEN z.chokyo_basho = 'プール' THEN NULL
     ELSE SAFE_CAST(z.chokyo_4f_d2 AS FLOAT64)
   END AS chokyo_4f_float,
 
   CASE
     WHEN z.chokyo_course = '坂' THEN z.chokyo_4f_d2 -- 坂路はchokyo_4fを3Fとして使用
-    WHEN z.chokyo_course = 'P' THEN NULL
+    WHEN z.chokyo_basho = 'プール' THEN NULL
     ELSE z.chokyo_3f_d2 -- それ以外はchokyo_3fをそのまま使用
   END AS chokyo_3f,
   CASE
     WHEN z.chokyo_course = '坂' THEN SAFE_CAST(z.chokyo_4f_d2 AS FLOAT64) -- 坂路はchokyo_4fを3Fとして使用
-    WHEN z.chokyo_course = 'P' THEN NULL
+    WHEN z.chokyo_basho = 'プール' THEN NULL
     ELSE SAFE_CAST(z.chokyo_3f_d2 AS FLOAT64) -- それ以外はchokyo_3fをそのまま使用
   END AS chokyo_3f_float,
 
   ROUND(
     CASE
-      WHEN z.chokyo_course = 'P' THEN NULL
+      WHEN z.chokyo_basho = 'プール' THEN NULL
       -- 坂路の場合: chokyo_3f (chokyo_4fの値) を使用。 chokyo_4f (chokyo_5fの値) を使用。
       WHEN z.chokyo_course = '坂' THEN
         SAFE_CAST(z.chokyo_4f_d2 AS FLOAT64) - (SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64) - SAFE_CAST(z.chokyo_4f_d2 AS FLOAT64))
@@ -541,9 +542,10 @@ SELECT
 
   z.chokyo_1f_d2 AS chokyo_1f,
   CASE
-    WHEN z.chokyo_course = 'P' THEN NULL
+    WHEN z.chokyo_basho = 'プール' THEN NULL
     ELSE SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64)
   END AS chokyo_1f_float,
+
   z.chokyo_ichidori,
   z.chokyo_ashiiro,
   CASE z.chokyo_ashiiro
