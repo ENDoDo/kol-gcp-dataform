@@ -80,6 +80,7 @@ config {
     chokyo_course: "調教コース",
     chokyo_basho_course_label: "調教場所とコースを結合したラベル",
     chokyo_babajotai: "調教馬場状態",
+    chokyo_hanro_pool_kaisu_int: "坂路またはプール:chokyo_6f それ以外:null",
     chokyo_8f: "調教タイム 8F",
     chokyo_8f_float: "調教タイム 8F (小数点)",
     chokyo_7f: "調教タイム 7F",
@@ -474,6 +475,10 @@ SELECT
   z.chokyo_babajotai,
   -- 調教タイム関連フィールド (chokyo_course の略語 '坂', 'P' を使用)
   CASE
+    WHEN z.chokyo_course IN ('坂', 'P') THEN SAFE_CAST(z.chokyo_6f_d2 AS INT64)
+    ELSE NULL
+  END AS chokyo_hanro_pool_kaisu_int,
+  CASE
     WHEN z.chokyo_course IN ('坂', 'P') THEN NULL
     ELSE z.chokyo_8f_d2
   END AS chokyo_8f,
@@ -491,14 +496,8 @@ SELECT
     ELSE SAFE_CAST(z.chokyo_7f_d2 AS FLOAT64)
   END AS chokyo_7f_float,
 
-  CASE
-    WHEN z.chokyo_course IN ('坂', 'P') THEN NULL
-    ELSE z.chokyo_6f_d2
-  END AS chokyo_6f,
-  CASE
-    WHEN z.chokyo_course IN ('坂', 'P') THEN NULL
-    ELSE SAFE_CAST(z.chokyo_6f_d2 AS FLOAT64)
-  END AS chokyo_6f_float,
+  z.chokyo_6f_d2 AS chokyo_6f,
+  SAFE_CAST(z.chokyo_6f_d2 AS FLOAT64) AS chokyo_6f_float,
 
   CASE
     WHEN z.chokyo_course = 'P' THEN NULL
