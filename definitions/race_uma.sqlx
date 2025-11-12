@@ -726,36 +726,52 @@ SELECT
   SAFE_CAST(z.tansho_odds AS FLOAT64) / 10 AS tansho_odds_float,
   z.kakutei_chakujun,
   SAFE_CAST(z.kakutei_chakujun AS INT64) AS kakutei_chakujun_num,
-  CASE
-    WHEN z.tansho3_umaban IS NOT NULL THEN z.tansho3_haraimodoshikin
-    WHEN z.tansho2_umaban IS NOT NULL THEN z.tansho2_haraimodoshikin
-    WHEN z.tansho1_umaban IS NOT NULL THEN z.tansho1_haraimodoshikin
-    ELSE NULL
+  CASE -- 修正ロジック: 確定着順が '1' の場合のみ払戻金のNULL判定を行い、それ以外は '0'
+    WHEN z.kakutei_chakujun IN ('01') THEN
+      CASE
+        WHEN z.tansho3_umaban IS NOT NULL THEN z.tansho3_haraimodoshikin
+        WHEN z.tansho2_umaban IS NOT NULL THEN z.tansho2_haraimodoshikin
+        WHEN z.tansho1_umaban IS NOT NULL THEN z.tansho1_haraimodoshikin
+        ELSE '0'
+      END
+    ELSE '0'
   END AS tansho_haraimodoshi,
   SAFE_CAST(
-    CASE
-      WHEN z.tansho3_umaban IS NOT NULL THEN z.tansho3_haraimodoshikin
-      WHEN z.tansho2_umaban IS NOT NULL THEN z.tansho2_haraimodoshikin
-      WHEN z.tansho1_umaban IS NOT NULL THEN z.tansho1_haraimodoshikin
-      ELSE NULL
+    CASE -- 修正ロジック (数値型)
+      WHEN z.kakutei_chakujun IN ('01') THEN
+        CASE
+          WHEN z.tansho3_umaban IS NOT NULL THEN z.tansho3_haraimodoshikin
+          WHEN z.tansho2_umaban IS NOT NULL THEN z.tansho2_haraimodoshikin
+          WHEN z.tansho1_umaban IS NOT NULL THEN z.tansho1_haraimodoshikin
+          ELSE '0'
+        END
+      ELSE '0'
     END
   AS INT64) AS tansho_haraimodoshi_num,
-  CASE
-    WHEN z.fukusho5_umaban IS NOT NULL THEN z.fukusho5_haraimodoshikin
-    WHEN z.fukusho4_umaban IS NOT NULL THEN z.fukusho4_haraimodoshikin
-    WHEN z.fukusho3_umaban IS NOT NULL THEN z.fukusho3_haraimodoshikin
-    WHEN z.fukusho2_umaban IS NOT NULL THEN z.fukusho2_haraimodoshikin
-    WHEN z.fukusho1_umaban IS NOT NULL THEN z.fukusho1_haraimodoshikin
-    ELSE NULL
+  CASE -- 修正ロジック: 確定着順が '1', '2', '3' の場合のみ払戻金のNULL判定を行い、それ以外は '0'
+    WHEN z.kakutei_chakujun IN ('01', '02', '03') THEN
+      CASE
+        WHEN z.fukusho5_umaban IS NOT NULL THEN z.fukusho5_haraimodoshikin
+        WHEN z.fukusho4_umaban IS NOT NULL THEN z.fukusho4_haraimodoshikin
+        WHEN z.fukusho3_umaban IS NOT NULL THEN z.fukusho3_haraimodoshikin
+        WHEN z.fukusho2_umaban IS NOT NULL THEN z.fukusho2_haraimodoshikin
+        WHEN z.fukusho1_umaban IS NOT NULL THEN z.fukusho1_haraimodoshikin
+        ELSE '0'
+      END
+    ELSE '0'
   END AS fukusho_haraimodoshi,
   SAFE_CAST(
-    CASE
-      WHEN z.fukusho5_umaban IS NOT NULL THEN z.fukusho5_haraimodoshikin
-      WHEN z.fukusho4_umaban IS NOT NULL THEN z.fukusho4_haraimodoshikin
-      WHEN z.fukusho3_umaban IS NOT NULL THEN z.fukusho3_haraimodoshikin
-      WHEN z.fukusho2_umaban IS NOT NULL THEN z.fukusho2_haraimodoshikin
-      WHEN z.fukusho1_umaban IS NOT NULL THEN z.fukusho1_haraimodoshikin
-      ELSE NULL
+    CASE -- 修正ロジック (数値型)
+      WHEN z.kakutei_chakujun IN ('01', '02', '03') THEN
+        CASE
+          WHEN z.fukusho5_umaban IS NOT NULL THEN z.fukusho5_haraimodoshikin
+          WHEN z.fukusho4_umaban IS NOT NULL THEN z.fukusho4_haraimodoshikin
+          WHEN z.fukusho3_umaban IS NOT NULL THEN z.fukusho3_haraimodoshikin
+          WHEN z.fukusho2_umaban IS NOT NULL THEN z.fukusho2_haraimodoshikin
+          WHEN z.fukusho1_umaban IS NOT NULL THEN z.fukusho1_haraimodoshikin
+          ELSE '0'
+        END
+      ELSE '0'
     END
   AS INT64) AS fukusho_haraimodoshi_num,
   z.ijo_kubun_code1,
