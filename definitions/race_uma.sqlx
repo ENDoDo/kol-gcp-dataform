@@ -78,6 +78,7 @@ config {
     chokyo_date: "調教年月日",
     chokyo_basho: "調教場所",
     chokyo_course: "調教コース",
+    chokyo_course_kubun: "調教コース区分",
     chokyo_basho_course_label: "調教場所とコースを結合したラベル",
     chokyo_babajotai: "調教馬場状態",
     chokyo_hanro_pool_kaisu_int: "坂路またはプール:chokyo_6f それ以外:null",
@@ -471,8 +472,13 @@ SELECT
   SAFE.PARSE_DATE('%Y%m%d', z.chokyo_nengappi) AS chokyo_date,
   z.chokyo_basho,
   z.chokyo_course,
+  CASE z.chokyo_course
+    WHEN '坂' THEN '坂路'
+    ELSE 'コース'
+  END AS chokyo_course_kubun,
   COALESCE(z.chokyo_basho, '') || COALESCE(z.chokyo_course, '') AS chokyo_basho_course_label,
   z.chokyo_babajotai,
+
   -- 調教タイム関連フィールド (chokyo_course の略語 '坂', 'P' を使用)
   CASE
     WHEN z.chokyo_basho = 'プール' OR z.chokyo_course = '坂' THEN SAFE_CAST(REGEXP_REPLACE(z.chokyo_6f_d2, r'[^0-9]', '') AS INT64)
