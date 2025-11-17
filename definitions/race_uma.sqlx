@@ -467,6 +467,7 @@ SELECT
   END AS chokyo_flag_label,
   z.chokyo_kijosha,
   CASE
+    WHEN z.chokyo_kijosha IS NULL THEN NULL
     WHEN z.chokyo_kijosha = '調教師' THEN '調教師'
     WHEN z.chokyo_kijosha = '見習' THEN '見習'
     WHEN z.chokyo_kijosha = '厩舎' THEN '厩舎'
