@@ -22,33 +22,41 @@ graph TD
         C -- データをパースしUpsert --> D["BigQuery Raw Tables<br>(kolbi_keiba.*)"];
     end
 
+    subgraph "データ変換トリガー (Trigger)"
+        D -- "テーブル更新検知<br>(kol_den1, kol_den2, etc.)" --> L{Cloud Logging Sink};
+        L -- "ログエントリ" --> P(Pub/Sub Topic);
+        P -- "メッセージ送信" --> E{Eventarc};
+        E -- "ワークフロー実行" --> W{Cloud Workflows};
+    end
+
     subgraph "データ変換 (Transformation)"
-        Git[GitHub<br>mainブランチ] -- コードソース --> E{Dataform Repository};
-        E -- スケジュール実行 --> F{Dataform Workflow};
-        F -- 変換クエリ(race.sqlx)を実行 --> G["BigQuery Mart Table<br>(kolbi_analysis.race)"];
-        D -- ソースとして参照 --> F;
+        Git[GitHub<br>mainブランチ] -- コードソース --> R{Dataform Repository};
+        W -- "Dataform実行開始" --> R;
+        R -- "変換クエリ(race.sqlx)を実行" --> G["BigQuery Mart Table<br>(kolbi_analysis.race)"];
+        D -- ソースとして参照 --> G;
     end
 
     style A fill:#D5E8D4,stroke:#82B366
     style G fill:#DAE8FC,stroke:#6C8EBF
+    style W fill:#FFE6CC,stroke:#D79B00
 ```
 
 1.  **データ取り込み**: ユーザーがKOLデータを含むZIPファイルをGCSにアップロードすると、Cloud Functionが起動し、BigQueryの`kolbi_keiba`データセットに生データを書き込みます。
-2.  **データ変換**: DataformはGitHubリポジトリの`main`ブランチを監視します。毎日午前7時になると、スケジュールされたワークフローが起動し、`kolbi_keiba`の生データを参照して`kolbi_analysis.race`テーブルを生成・更新します。
-2.  **データ変換**: DataformはGitHubリポジトリの`main`ブランチを監視します。毎日午前7時になると、スケジュールされたワークフローが起動し、`kolbi_keiba`の生データを参照して`kolbi_analysis.race`テーブルを生成・更新します。
+2.  **データ変換トリガー**: BigQueryの特定のテーブル（`kol_den1`, `kol_den2`, `kol_ket`, `kol_sei1`, `kol_sei2`）が更新されると、Cloud Logging Sinkがそれを検知し、Pub/Sub経由でEventarcに通知します。EventarcはCloud Workflowsを起動します。
+3.  **データ変換**: Cloud WorkflowsはDataformのワークフローを開始します。Dataformは`kolbi_keiba`の生データを参照して`kolbi_analysis.race`テーブルを生成・更新します。
 
 ## 技術スタック
 
 - **クラウド**: Google Cloud Platform
-  - **コンピューティング**: Cloud Functions (第2世代)
+  - **コンピューティング**: Cloud Functions (第2世代), Cloud Workflows
   - **ストレージ**: Cloud Storage (GCS)
   - **DWH**: BigQuery
   - **データ変換**: Dataform
-  - **イベント**: Eventarc
+  - **イベント**: Eventarc, Pub/Sub, Cloud Logging
   - **ID管理**: IAM, Secret Manager
 - **IaC**: Terraform
 - **バージョン管理**: GitHub
-- **言語**: Python (Cloud Functions), SQL (Dataform)
+- **言語**: Python (Cloud Functions), SQL (Dataform), YAML (Cloud Workflows)
 
 ## ディレクトリ構成
 
@@ -56,6 +64,8 @@ graph TD
 .
 ├── terraform/      # GCPインフラを定義するTerraformコード
 │   ├── dataform.tf
+│   ├── workflows.tf # Cloud Workflowsの定義
+│   ├── triggers.tf  # Eventarc, Pub/Sub, Logging Sinkの定義
 │   └── ...
 ├── package.json
 ├── dataform.json
@@ -110,13 +120,12 @@ terraform plan
 # リソースをGCP上に作成
 terraform apply
 ```
-`apply`が完了すると、GCSバケット、Cloud Function、Dataformリポジトリと自動実行ワークフローなどが構築されます。
+`apply`が完了すると、GCSバケット、Cloud Function、Dataformリポジトリ、Cloud Workflows、およびトリガー設定などが構築されます。
 
 ## パイプラインの実行方法
 
 1.  **データ取り込み**: KOLデータを含む`.zip`ファイルを、Terraformが作成したGCSバケット (`kol-keiba-bucket`) にアップロードします。Cloud Functionが自動で起動し、BigQueryの`kolbi_keiba`データセットにデータが格納されます。
-2.  **データ変換**: `terraform apply`で設定されたスケジュール (`毎日午前7時 JST`) になると、Dataformのワークフローが自動的に実行され、`kolbi_analysis.race`テーブルが更新されます。
-2.  **データ変換**: `terraform apply`で設定されたスケジュール (`毎日午前7時 JST`) になると、Dataformのワークフローが自動的に実行され、`kolbi_analysis.race`テーブルが更新されます。
+2.  **データ変換**: BigQueryテーブルの更新が完了すると、自動的にDataformのワークフローが実行され、`kolbi_analysis.race`テーブルが更新されます。（スケジュール実行も設定されている場合は、指定時刻にも実行されます）
 
 ## クリーンアップ
 
