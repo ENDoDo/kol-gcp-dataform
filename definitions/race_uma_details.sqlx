@@ -6,6 +6,7 @@
 -- Dataform設定ブロック
 config {
   type: "table",
+  dependencies: [ "race", "race_uma" ],
   description: "馬毎のレース情報(race_uma)とレース自体の情報(race)を結合した詳細テーブル。",
   columns: {
     // ID / コード
