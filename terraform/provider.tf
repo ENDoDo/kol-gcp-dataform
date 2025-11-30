@@ -15,11 +15,11 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 7.7" # 最新の安定バージョンに固定 (2024年6月時点)
+      version = "~> 7.12" # 最新の安定バージョンに固定 (2025年11月時点)
     }
     google-beta = {
       source  = "hashicorp/google-beta"
-      version = "~> 7.7" # googleプロバイダとバージョンを合わせる
+      version = "~> 7.12" # googleプロバイダとバージョンを合わせる
     }
   }
 }
