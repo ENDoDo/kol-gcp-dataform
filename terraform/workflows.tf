@@ -63,7 +63,7 @@ main:
           body:
             compilationResult: $${compilationResult.body.name}
             invocationConfig:
-              serviceAccount: "${google_service_account.dataform.email}"
+              serviceAccount: "dataform-runner-stg@${var.project_id}.iam.gserviceaccount.com"
               # includedTargets:
               #   - database: "${var.project_id}"
               #     schema: "${var.stg_schema}"
@@ -114,7 +114,7 @@ main:
           body:
             compilationResult: $${compilationResult.body.name}
             invocationConfig:
-              serviceAccount: "${google_service_account.dataform.email}"
+              serviceAccount: "dataform-runner@${var.project_id}.iam.gserviceaccount.com"
               # includedTargets:
               #   - database: "${var.project_id}"
               #     schema: "${var.prd_schema}"
