@@ -107,20 +107,40 @@ DataformがGitHubリポジトリにアクセスするために、認証用のト
 
 ### 4. インフラのデプロイ
 
+本プロジェクトでは Terraform Workspace を使用して環境（Staging / Production）を管理しています。
+
+#### Staging環境
+
 ```bash
-# Terraformディレクトリに移動
 cd terraform
 
-# Terraformを初期化 (プロバイダのバージョンを更新するため-upgradeを推奨)
-terraform init -upgrade
+# ワークスペースの切り替え（作成がまだの場合は terraform workspace new stg）
+terraform workspace select stg
 
-# (任意) どのようなリソースが作成されるか確認
-terraform plan
+# 初期化
+terraform init
 
-# リソースをGCP上に作成
-terraform apply
+# デプロイ (stg.tfvarsを使用)
+terraform apply -var-file="stg.tfvars"
 ```
-`apply`が完了すると、GCSバケット、Cloud Function、Dataformリポジトリ、Cloud Workflows、およびトリガー設定などが構築されます。
+
+#### Production環境
+
+```bash
+cd terraform
+
+# ワークスペースの切り替え（作成がまだの場合は terraform workspace new prd）
+terraform workspace select prd
+
+# 初期化
+terraform init
+
+# デプロイ (prd.tfvarsを使用)
+terraform apply -var-file="prd.tfvars"
+```
+
+`apply`が完了すると、環境に応じたGCSバケット、Cloud Function、Dataformリポジトリ、Cloud Workflowsなどが構築・更新されます。
+特にDataform Workflowは、Staging環境では `dataform-trigger-workflow-stg`、Production環境では `dataform-trigger-workflow` がメインで使用されますが、Terraformの構成上、両方のリソース定義が含まれる場合があります。
 
 ## パイプラインの実行方法
 
