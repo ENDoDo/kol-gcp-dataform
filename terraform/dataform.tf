@@ -169,7 +169,6 @@ resource "google_dataform_repository_workflow_config" "workflow_stg" {
     service_account = google_service_account.dataform.email
   }
 
-  cron_schedule = "0 7 * * *"
   time_zone     = "Asia/Tokyo"
 }
 
@@ -246,7 +245,6 @@ resource "google_dataform_repository_workflow_config" "workflow_prd" {
     service_account = google_service_account.dataform.email
   }
 
-  cron_schedule = "0 7 * * *"
   time_zone     = "Asia/Tokyo"
 }
 
