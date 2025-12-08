@@ -62,13 +62,13 @@ main:
             type: OAuth2
           body:
             compilationResult: $${compilationResult.body.name}
-            invocationConfig: {}
+            invocationConfig:
+              serviceAccount: "${google_service_account.dataform.email}"
               # includedTargets:
               #   - database: "${var.project_id}"
               #     schema: "${local.dataform_output_schema}"
               #     name: "race" # 必要に応じて対象を変更または動的に設定してください
               # transitiveDependenciesIncluded: true
-              # serviceAccount: "${google_service_account.dataform.email}"
         result: workflowInvocation
     - returnResult:
         return: $${workflowInvocation}
