@@ -16,14 +16,29 @@ resource "google_logging_project_sink" "bq_update_sink" {
   filter      = <<EOT
 resource.type="bigquery_resource"
 protoPayload.methodName="jobservice.jobcompleted"
-protoPayload.serviceData.jobCompletedEvent.job.jobStatistics.totalLoadOutputBytes > 0
-protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.load.destinationTable.datasetId="${local.dataform_source_schema}"
 (
-  protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.load.destinationTable.tableId="kol_den1" OR
-  protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.load.destinationTable.tableId="kol_den2" OR
-  protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.load.destinationTable.tableId="kol_ket" OR
-  protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.load.destinationTable.tableId="kol_sei1" OR
-  protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.load.destinationTable.tableId="kol_sei2"
+  (
+    protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.load.destinationTable.datasetId="${local.dataform_source_schema}"
+    protoPayload.serviceData.jobCompletedEvent.job.jobStatistics.totalLoadOutputBytes > 0
+    (
+      protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.load.destinationTable.tableId="kol_den1" OR
+      protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.load.destinationTable.tableId="kol_den2" OR
+      protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.load.destinationTable.tableId="kol_ket" OR
+      protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.load.destinationTable.tableId="kol_sei1" OR
+      protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.load.destinationTable.tableId="kol_sei2"
+    )
+  )
+  OR
+  (
+    protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.query.destinationTable.datasetId="${local.dataform_source_schema}"
+    (
+      protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.query.destinationTable.tableId="kol_den1" OR
+      protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.query.destinationTable.tableId="kol_den2" OR
+      protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.query.destinationTable.tableId="kol_ket" OR
+      protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.query.destinationTable.tableId="kol_sei1" OR
+      protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.query.destinationTable.tableId="kol_sei2"
+    )
+  )
 )
 EOT
 
