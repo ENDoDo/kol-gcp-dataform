@@ -48,6 +48,11 @@ main:
             type: OAuth2
           body:
             gitCommitish: "main"
+            codeCompilationConfig:
+              defaultDatabase: "${var.project_id}"
+              defaultSchema: "${local.dataform_output_schema}"
+              vars:
+                source_schema: "${local.dataform_source_schema}"
         result: compilationResult
     - createWorkflowInvocation:
         call: http.post
