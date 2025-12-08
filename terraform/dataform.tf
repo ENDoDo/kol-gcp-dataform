@@ -58,6 +58,15 @@ resource "google_project_iam_member" "dataform_bigquery_job_user" {
   member  = "serviceAccount:${google_service_account.dataform.email}"
 }
 
+# Dataform Runnerに自身の出力先データセットへの権限を明示的に付与
+# プロジェクトレベルの権限だけではINFORMATION_SCHEMAの参照などでエラーになる場合があるため
+resource "google_bigquery_dataset_iam_member" "runner_output_data_editor" {
+  project    = var.project_id
+  dataset_id = local.dataform_output_schema
+  role       = "roles/bigquery.dataEditor"
+  member     = "serviceAccount:${google_service_account.dataform.email}"
+}
+
 # stg環境のDataform Runnerがprd環境のデータセット(kolbi_analysis)のメタデータを参照できるようにする
 # これにより、INFORMATION_SCHEMAへのアクセスが可能になる
 resource "google_bigquery_dataset_iam_member" "stg_runner_prd_metadata_viewer" {
