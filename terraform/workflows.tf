@@ -38,7 +38,7 @@ main:
   steps:
     - init:
         assign:
-          - repository: "projects/${var.project_id}/locations/${var.region}/repositories/${google_dataform_repository.repository.name}"
+          - repository: "projects/${var.project_id}/locations/${var.region}/repositories/${terraform.workspace == "prd" ? google_dataform_repository.repository_prd.name : google_dataform_repository.repository_stg.name}"
           - workspace: "${var.dataform_workspace_id}"
     - createCompilationResult:
         call: http.post

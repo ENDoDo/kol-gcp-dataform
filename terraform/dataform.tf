@@ -10,7 +10,7 @@ locals {
   # Dataformの出力先スキーマを環境によって切り替える
   # prdの場合はvar.prd_schemaを、それ以外(stg)の場合はvar.stg_schemaを使用する
   dataform_output_schema = terraform.workspace == "prd" ? var.prd_schema : var.stg_schema
-  
+
   # Dataformのソーススキーマを環境によって切り替える
   # prdの場合は "kolbi_keiba" を、それ以外(stg)の場合は "kolbi_keiba_stg" を使用する
   dataform_source_schema = terraform.workspace == "prd" ? "kolbi_keiba" : "kolbi_keiba_stg"
@@ -58,6 +58,16 @@ resource "google_project_iam_member" "dataform_bigquery_job_user" {
   member  = "serviceAccount:${google_service_account.dataform.email}"
 }
 
+# stg環境のDataform Runnerがprd環境のデータセット(kolbi_analysis)のメタデータを参照できるようにする
+# これにより、INFORMATION_SCHEMAへのアクセスが可能になる
+resource "google_bigquery_dataset_iam_member" "stg_runner_prd_metadata_viewer" {
+  count      = terraform.workspace == "prd" ? 0 : 1
+  project    = var.project_id
+  dataset_id = var.prd_schema
+  role       = "roles/bigquery.metadataViewer"
+  member     = "serviceAccount:${google_service_account.dataform.email}"
+}
+
 # --- Git Authentication Secret ---
 resource "google_secret_manager_secret" "dataform_git_token" {
   provider  = google-beta.beta
@@ -77,12 +87,12 @@ resource "google_secret_manager_secret_version" "dataform_git_token_version" {
 }
 
 # --- Dataform Repository and Configurations ---
-# 1. Dataformリポジトリ (Gitリポジトリと連携)
-resource "google_dataform_repository" "repository" {
+# --- Dataform Repository and Configurations (Staging) ---
+resource "google_dataform_repository" "repository_stg" {
   provider = google-beta.beta
   project  = var.project_id
   region   = var.region
-  name     = "${var.dataform_repository_id}${local.env_suffix}"
+  name     = "${var.dataform_repository_id}-stg"
 
   git_remote_settings {
     url                               = "https://github.com/ENDoDo/kol-gcp-dataform.git"
@@ -96,57 +106,132 @@ resource "google_dataform_repository" "repository" {
   ]
 }
 
-# 2. リリース設定
-resource "google_dataform_repository_release_config" "release_config" {
+resource "google_dataform_repository_release_config" "release_config_stg" {
   provider = google-beta.beta
-  project    = google_dataform_repository.repository.project
-  region     = google_dataform_repository.repository.region
-  repository = google_dataform_repository.repository.name
-  name          = "production-release${local.env_suffix}"
+  project    = google_dataform_repository.repository_stg.project
+  region     = google_dataform_repository.repository_stg.region
+  repository = google_dataform_repository.repository_stg.name
+  name          = "production-release-stg"
   git_commitish = "main"
 
   code_compilation_config {
     default_database = var.project_id
-    default_schema   = local.dataform_output_schema
+    default_schema   = var.stg_schema
     vars = {
-      source_schema = local.dataform_source_schema
+      source_schema = "kolbi_keiba_stg"
     }
   }
 }
 
-# 3. ワークフロー設定
-resource "google_dataform_repository_workflow_config" "workflow" {
+resource "google_dataform_repository_workflow_config" "workflow_stg" {
   provider = google-beta.beta
-  project    = google_dataform_repository.repository.project
-  region     = google_dataform_repository.repository.region
-  repository = google_dataform_repository.repository.name
-  name           = "daily-race-table-update${local.env_suffix}"
-  release_config = google_dataform_repository_release_config.release_config.id
+  project    = google_dataform_repository.repository_stg.project
+  region     = google_dataform_repository.repository_stg.region
+  repository = google_dataform_repository.repository_stg.name
+  name           = "daily-race-table-update-stg"
+  release_config = google_dataform_repository_release_config.release_config_stg.id
 
   invocation_config {
     included_targets {
       database = var.project_id
-      schema   = local.dataform_output_schema
+      schema   = var.stg_schema
       name     = "race"
     }
     included_targets {
       database = var.project_id
-      schema   = local.dataform_output_schema
+      schema   = var.stg_schema
       name     = "race_uma"
     }
     included_targets {
       database = var.project_id
-      schema   = local.dataform_output_schema
+      schema   = var.stg_schema
       name     = "race_uma_chokyo"
     }
     included_targets {
       database = var.project_id
-      schema   = local.dataform_output_schema
+      schema   = var.stg_schema
       name     = "race_uma_details"
     }
     included_targets {
       database = var.project_id
-      schema   = local.dataform_output_schema
+      schema   = var.stg_schema
+      name     = "schedule"
+    }
+    service_account = google_service_account.dataform.email
+  }
+
+  cron_schedule = "0 7 * * *"
+  time_zone     = "Asia/Tokyo"
+}
+
+# --- Dataform Repository and Configurations (Production) ---
+resource "google_dataform_repository" "repository_prd" {
+  provider = google-beta.beta
+  project  = var.project_id
+  region   = var.region
+  name     = var.dataform_repository_id # kol-dataform-repo
+
+  git_remote_settings {
+    url                               = "https://github.com/ENDoDo/kol-gcp-dataform.git"
+    default_branch                    = "main"
+    authentication_token_secret_version = "projects/56638639323/secrets/github-token/versions/latest"
+  }
+  depends_on = [
+    google_project_iam_member.dataform_bigquery_data_editor,
+    google_project_iam_member.dataform_bigquery_job_user,
+    google_project_service.dataform,
+  ]
+}
+
+resource "google_dataform_repository_release_config" "release_config_prd" {
+  provider = google-beta.beta
+  project    = google_dataform_repository.repository_prd.project
+  region     = google_dataform_repository.repository_prd.region
+  repository = google_dataform_repository.repository_prd.name
+  name          = "production-release"
+  git_commitish = "main"
+
+  code_compilation_config {
+    default_database = var.project_id
+    default_schema   = var.prd_schema
+    vars = {
+      source_schema = "kolbi_keiba"
+    }
+  }
+}
+
+resource "google_dataform_repository_workflow_config" "workflow_prd" {
+  provider = google-beta.beta
+  project    = google_dataform_repository.repository_prd.project
+  region     = google_dataform_repository.repository_prd.region
+  repository = google_dataform_repository.repository_prd.name
+  name           = "daily-race-table-update"
+  release_config = google_dataform_repository_release_config.release_config_prd.id
+
+  invocation_config {
+    included_targets {
+      database = var.project_id
+      schema   = var.prd_schema
+      name     = "race"
+    }
+    included_targets {
+      database = var.project_id
+      schema   = var.prd_schema
+      name     = "race_uma"
+    }
+    included_targets {
+      database = var.project_id
+      schema   = var.prd_schema
+      name     = "race_uma_chokyo"
+    }
+    included_targets {
+      database = var.project_id
+      schema   = var.prd_schema
+      name     = "race_uma_details"
+    }
+    included_targets {
+      database = var.project_id
+      schema   = var.prd_schema
       name     = "schedule"
     }
     service_account = google_service_account.dataform.email
@@ -170,5 +255,5 @@ resource "google_service_account_iam_member" "dataform_agent_impersonator" {
 # --- Outputs ---
 output "dataform_repository_url" {
   description = "URL of the created Dataform repository."
-  value       = "https://console.cloud.google.com/bigquery/dataform/locations/${var.region}/repositories/${google_dataform_repository.repository.name}?project=${var.project_id}"
+  value       = "https://console.cloud.google.com/bigquery/dataform/locations/${var.region}/repositories/${terraform.workspace == "prd" ? google_dataform_repository.repository_prd.name : google_dataform_repository.repository_stg.name}?project=${var.project_id}"
 }
