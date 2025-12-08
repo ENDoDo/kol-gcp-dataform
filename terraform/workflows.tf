@@ -64,11 +64,6 @@ main:
             compilationResult: $${compilationResult.body.name}
             invocationConfig:
               serviceAccount: "dataform-runner-stg@${var.project_id}.iam.gserviceaccount.com"
-              # includedTargets:
-              #   - database: "${var.project_id}"
-              #     schema: "${var.stg_schema}"
-              #     name: "race" # 必要に応じて対象を変更または動的に設定してください
-              # transitiveDependenciesIncluded: true
         result: workflowInvocation
     - returnResult:
         return: $${workflowInvocation}
@@ -115,11 +110,6 @@ main:
             compilationResult: $${compilationResult.body.name}
             invocationConfig:
               serviceAccount: "dataform-runner@${var.project_id}.iam.gserviceaccount.com"
-              # includedTargets:
-              #   - database: "${var.project_id}"
-              #     schema: "${var.prd_schema}"
-              #     name: "race" # 必要に応じて対象を変更または動的に設定してください
-              # transitiveDependenciesIncluded: true
         result: workflowInvocation
     - returnResult:
         return: $${workflowInvocation}
