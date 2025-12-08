@@ -24,11 +24,11 @@ resource "google_project_iam_member" "workflows_log_writer" {
 }
 
 # --- Cloud Workflow ---
-resource "google_workflows_workflow" "dataform_trigger_workflow" {
+resource "google_workflows_workflow" "dataform_trigger_workflow_stg" {
   depends_on = [google_project_service.workflows]
-  name            = "dataform-trigger-workflow${local.env_suffix}"
+  name            = "dataform-trigger-workflow-stg"
   region          = var.region
-  description     = "BigQueryテーブル更新時にDataform実行をトリガーするワークフロー"
+  description     = "BigQueryテーブル更新時にDataform実行をトリガーするワークフロー (Staging)"
   service_account = google_service_account.workflows_sa.id
   project         = var.project_id
 
@@ -38,7 +38,7 @@ main:
   steps:
     - init:
         assign:
-          - repository: "projects/${var.project_id}/locations/${var.region}/repositories/${terraform.workspace == "prd" ? google_dataform_repository.repository_prd.name : google_dataform_repository.repository_stg.name}"
+          - repository: "projects/${var.project_id}/locations/${var.region}/repositories/${google_dataform_repository.repository_stg.name}"
           - workspace: "${var.dataform_workspace_id}"
     - createCompilationResult:
         call: http.post
@@ -50,9 +50,9 @@ main:
             gitCommitish: "main"
             codeCompilationConfig:
               defaultDatabase: "${var.project_id}"
-              defaultSchema: "${local.dataform_output_schema}"
+              defaultSchema: "${var.stg_schema}"
               vars:
-                source_schema: "${local.dataform_source_schema}"
+                source_schema: "kolbi_keiba_stg"
         result: compilationResult
     - createWorkflowInvocation:
         call: http.post
@@ -66,7 +66,58 @@ main:
               serviceAccount: "${google_service_account.dataform.email}"
               # includedTargets:
               #   - database: "${var.project_id}"
-              #     schema: "${local.dataform_output_schema}"
+              #     schema: "${var.stg_schema}"
+              #     name: "race" # 必要に応じて対象を変更または動的に設定してください
+              # transitiveDependenciesIncluded: true
+        result: workflowInvocation
+    - returnResult:
+        return: $${workflowInvocation}
+EOF
+}
+
+resource "google_workflows_workflow" "dataform_trigger_workflow_prd" {
+  depends_on = [google_project_service.workflows]
+  name            = "dataform-trigger-workflow"
+  region          = var.region
+  description     = "BigQueryテーブル更新時にDataform実行をトリガーするワークフロー (Production)"
+  service_account = google_service_account.workflows_sa.id
+  project         = var.project_id
+
+  source_contents = <<EOF
+main:
+  params: [args]
+  steps:
+    - init:
+        assign:
+          - repository: "projects/${var.project_id}/locations/${var.region}/repositories/${google_dataform_repository.repository_prd.name}"
+          - workspace: "${var.dataform_workspace_id}"
+    - createCompilationResult:
+        call: http.post
+        args:
+          url: $${"https://dataform.googleapis.com/v1beta1/" + repository + "/compilationResults"}
+          auth:
+            type: OAuth2
+          body:
+            gitCommitish: "main"
+            codeCompilationConfig:
+              defaultDatabase: "${var.project_id}"
+              defaultSchema: "${var.prd_schema}"
+              vars:
+                source_schema: "kolbi_keiba"
+        result: compilationResult
+    - createWorkflowInvocation:
+        call: http.post
+        args:
+          url: $${"https://dataform.googleapis.com/v1beta1/" + repository + "/workflowInvocations"}
+          auth:
+            type: OAuth2
+          body:
+            compilationResult: $${compilationResult.body.name}
+            invocationConfig:
+              serviceAccount: "${google_service_account.dataform.email}"
+              # includedTargets:
+              #   - database: "${var.project_id}"
+              #     schema: "${var.prd_schema}"
               #     name: "race" # 必要に応じて対象を変更または動的に設定してください
               # transitiveDependenciesIncluded: true
         result: workflowInvocation
