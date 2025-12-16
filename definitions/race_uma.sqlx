@@ -595,7 +595,7 @@ SELECT
     WHEN '直抑え' THEN '直抑え'
     WHEN '外逃げ' THEN '外逃げ'
     WHEN 'ヨレる' THEN 'ヨレる'
-    ELSE NULL
+    ELSE z.chokyo_ashiiro
   END AS chokyo_ashiiro_label,
   z.chokyo_yajirushi,
   CASE z.chokyo_yajirushi
