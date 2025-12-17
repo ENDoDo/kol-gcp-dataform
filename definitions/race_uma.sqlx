@@ -211,6 +211,9 @@ config {
     corner4_juni_label: "4角順位(ラベル)",
     corner4_ichidori: "4角位置取り",
     corner4_ichidori_label: "4角位置取り(ラベル)",
+    comment_kishu_kyusha: "騎手厩舎コメント",
+    comment_next: "次走へのメモ",
+    comment_last: "前回出走時のコメント",
     // タイムスタンプ
     created: "データ作成日時",
     modified: "データ更新日時"
@@ -347,7 +350,10 @@ WITH
       s1.fukusho4_umaban,
       s1.fukusho4_haraimodoshikin,
       s1.fukusho5_umaban,
-      s1.fukusho5_haraimodoshikin
+      s1.fukusho5_haraimodoshikin,
+      c1.comment_kishu_kyusha,
+      c1.comment_next,
+      c1.comment_last
     FROM
       ${ref("kol_den2")} AS d2
     LEFT JOIN
@@ -358,6 +364,8 @@ WITH
       ${ref("kol_sei1")} AS s1 ON SUBSTR(d2.race_code_uma_kol, 1, 16) = s1.race_code_kol
     LEFT JOIN
       ${ref("kol_ket")} AS k ON d2.ketto_toroku_bango = k.ketto_toroku_bango_kol
+    LEFT JOIN
+      ${ref("kol_com1")} AS c1 ON d2.race_code_uma_kol = c1.race_code_uma_kol
   ),
 
 -- CTE Step2: ウィンドウ関数を使い、馬ごとに1つ前のレース情報を取得
@@ -901,6 +909,9 @@ SELECT
     WHEN '5' THEN '大外'
     ELSE NULL
   END AS corner4_ichidori_label,
+  z.comment_kishu_kyusha,
+  z.comment_next,
+  z.comment_last,
   CURRENT_TIMESTAMP() AS created,
   CURRENT_TIMESTAMP() AS modified
 FROM
