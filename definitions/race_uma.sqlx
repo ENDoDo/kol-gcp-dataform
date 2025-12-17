@@ -739,8 +739,9 @@ SELECT
   SAFE.PARSE_DATE('%Y%m%d', z.chokyo_nengappi) AS chokyo_date,
   z.chokyo_basho,
   z.chokyo_course,
-  CASE z.chokyo_course
-    WHEN '坂' THEN '坂路'
+  CASE
+    WHEN z.chokyo_course = '坂' THEN '坂路'
+    WHEN z.chokyo_basho = 'プール' THEN 'プール'
     ELSE 'コース'
   END AS chokyo_course_kubun,
   COALESCE(z.chokyo_basho, '') || COALESCE(z.chokyo_course, '') AS chokyo_basho_course_label,
@@ -901,8 +902,9 @@ SELECT
   SAFE.PARSE_DATE('%Y%m%d', z.chokyo1_nengappi) AS chokyo1_nengappi_date,
   z.chokyo1_basho,
   z.chokyo1_course,
-  CASE z.chokyo1_course
-    WHEN '坂' THEN '坂路'
+  CASE
+    WHEN z.chokyo1_course = '坂' THEN '坂路'
+    WHEN z.chokyo1_basho = 'プール' THEN 'プール'
     ELSE 'コース'
   END AS chokyo1_course_kubun,
   COALESCE(z.chokyo1_basho, '') || COALESCE(z.chokyo1_course, '') AS chokyo1_basho_course_label,
@@ -986,8 +988,9 @@ SELECT
   SAFE.PARSE_DATE('%Y%m%d', z.chokyo2_nengappi) AS chokyo2_nengappi_date,
   z.chokyo2_basho,
   z.chokyo2_course,
-  CASE z.chokyo2_course
-    WHEN '坂' THEN '坂路'
+  CASE
+    WHEN z.chokyo2_course = '坂' THEN '坂路'
+    WHEN z.chokyo2_basho = 'プール' THEN 'プール'
     ELSE 'コース'
   END AS chokyo2_course_kubun,
   COALESCE(z.chokyo2_basho, '') || COALESCE(z.chokyo2_course, '') AS chokyo2_basho_course_label,
@@ -1068,8 +1071,9 @@ SELECT
   SAFE.PARSE_DATE('%Y%m%d', z.chokyo3_nengappi) AS chokyo3_nengappi_date,
   z.chokyo3_basho,
   z.chokyo3_course,
-  CASE z.chokyo3_course
-    WHEN '坂' THEN '坂路'
+  CASE
+    WHEN z.chokyo3_course = '坂' THEN '坂路'
+    WHEN z.chokyo3_basho = 'プール' THEN 'プール'
     ELSE 'コース'
   END AS chokyo3_course_kubun,
   COALESCE(z.chokyo3_basho, '') || COALESCE(z.chokyo3_course, '') AS chokyo3_basho_course_label,
