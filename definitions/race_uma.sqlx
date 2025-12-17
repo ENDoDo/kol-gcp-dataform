@@ -395,23 +395,109 @@ WITH
       s2.corner3_juni,
       s2.corner4_juni,
       s2.corner4_ichidori,
-      s2.chokyo_flag,
-      s2.chokyo_kijosha,
-      s2.chokyo_nengappi,
-      s2.chokyo_basho,
-      s2.chokyo_course,
-      s2.chokyo_babajotai,
-      s2.chokyo_8f AS chokyo_8f_d2,
-      s2.chokyo_7f AS chokyo_7f_d2,
-      s2.chokyo_6f AS chokyo_6f_d2,
-      s2.chokyo_5f AS chokyo_5f_d2,
-      s2.chokyo_4f AS chokyo_4f_d2,
-      s2.chokyo_3f AS chokyo_3f_d2,
-      s2.chokyo_1f AS chokyo_1f_d2,
-      s2.chokyo_ichidori,
-      s2.chokyo_ashiiro,
-      s2.chokyo_yajirushi,
-      s2.chokyo_reigai,
+      -- Chokyo Dynamic Selection Logic
+      CASE
+        WHEN d2.chokyo1_flag = '1' THEN d2.chokyo1_flag
+        WHEN d2.chokyo2_flag = '1' THEN d2.chokyo2_flag
+        WHEN d2.chokyo3_flag = '1' THEN d2.chokyo3_flag
+        ELSE NULL -- default? or s2.chokyo_flag? User implied d2 only.
+      END AS chokyo_flag,
+      CASE
+        WHEN d2.chokyo1_flag = '1' THEN d2.chokyo1_kijosha
+        WHEN d2.chokyo2_flag = '1' THEN d2.chokyo2_kijosha
+        WHEN d2.chokyo3_flag = '1' THEN d2.chokyo3_kijosha
+        ELSE NULL
+      END AS chokyo_kijosha,
+      CASE
+        WHEN d2.chokyo1_flag = '1' THEN d2.chokyo1_nengappi
+        WHEN d2.chokyo2_flag = '1' THEN d2.chokyo2_nengappi
+        WHEN d2.chokyo3_flag = '1' THEN d2.chokyo3_nengappi
+        ELSE NULL
+      END AS chokyo_nengappi,
+      CASE
+        WHEN d2.chokyo1_flag = '1' THEN d2.chokyo1_basho
+        WHEN d2.chokyo2_flag = '1' THEN d2.chokyo2_basho
+        WHEN d2.chokyo3_flag = '1' THEN d2.chokyo3_basho
+        ELSE NULL
+      END AS chokyo_basho,
+      CASE
+        WHEN d2.chokyo1_flag = '1' THEN d2.chokyo1_course
+        WHEN d2.chokyo2_flag = '1' THEN d2.chokyo2_course
+        WHEN d2.chokyo3_flag = '1' THEN d2.chokyo3_course
+        ELSE NULL
+      END AS chokyo_course,
+      CASE
+        WHEN d2.chokyo1_flag = '1' THEN d2.chokyo1_babajotai
+        WHEN d2.chokyo2_flag = '1' THEN d2.chokyo2_babajotai
+        WHEN d2.chokyo3_flag = '1' THEN d2.chokyo3_babajotai
+        ELSE NULL
+      END AS chokyo_babajotai,
+      CASE
+        WHEN d2.chokyo1_flag = '1' THEN d2.chokyo1_8f
+        WHEN d2.chokyo2_flag = '1' THEN d2.chokyo2_8f
+        WHEN d2.chokyo3_flag = '1' THEN d2.chokyo3_8f
+        ELSE NULL
+      END AS chokyo_8f_d2,
+      CASE
+        WHEN d2.chokyo1_flag = '1' THEN d2.chokyo1_7f
+        WHEN d2.chokyo2_flag = '1' THEN d2.chokyo2_7f
+        WHEN d2.chokyo3_flag = '1' THEN d2.chokyo3_7f
+        ELSE NULL
+      END AS chokyo_7f_d2,
+      CASE
+        WHEN d2.chokyo1_flag = '1' THEN d2.chokyo1_6f
+        WHEN d2.chokyo2_flag = '1' THEN d2.chokyo2_6f
+        WHEN d2.chokyo3_flag = '1' THEN d2.chokyo3_6f
+        ELSE NULL
+      END AS chokyo_6f_d2,
+      CASE
+        WHEN d2.chokyo1_flag = '1' THEN d2.chokyo1_5f
+        WHEN d2.chokyo2_flag = '1' THEN d2.chokyo2_5f
+        WHEN d2.chokyo3_flag = '1' THEN d2.chokyo3_5f
+        ELSE NULL
+      END AS chokyo_5f_d2,
+      CASE
+        WHEN d2.chokyo1_flag = '1' THEN d2.chokyo1_4f
+        WHEN d2.chokyo2_flag = '1' THEN d2.chokyo2_4f
+        WHEN d2.chokyo3_flag = '1' THEN d2.chokyo3_4f
+        ELSE NULL
+      END AS chokyo_4f_d2,
+      CASE
+        WHEN d2.chokyo1_flag = '1' THEN d2.chokyo1_3f
+        WHEN d2.chokyo2_flag = '1' THEN d2.chokyo2_3f
+        WHEN d2.chokyo3_flag = '1' THEN d2.chokyo3_3f
+        ELSE NULL
+      END AS chokyo_3f_d2,
+      CASE
+        WHEN d2.chokyo1_flag = '1' THEN d2.chokyo1_1f
+        WHEN d2.chokyo2_flag = '1' THEN d2.chokyo2_1f
+        WHEN d2.chokyo3_flag = '1' THEN d2.chokyo3_1f
+        ELSE NULL
+      END AS chokyo_1f_d2,
+      CASE
+        WHEN d2.chokyo1_flag = '1' THEN d2.chokyo1_ichidori
+        WHEN d2.chokyo2_flag = '1' THEN d2.chokyo2_ichidori
+        WHEN d2.chokyo3_flag = '1' THEN d2.chokyo3_ichidori
+        ELSE NULL
+      END AS chokyo_ichidori,
+      CASE
+        WHEN d2.chokyo1_flag = '1' THEN d2.chokyo1_ashiiro
+        WHEN d2.chokyo2_flag = '1' THEN d2.chokyo2_ashiiro
+        WHEN d2.chokyo3_flag = '1' THEN d2.chokyo3_ashiiro
+        ELSE NULL
+      END AS chokyo_ashiiro,
+      CASE
+        WHEN d2.chokyo1_flag = '1' THEN d2.chokyo1_yajirushi
+        WHEN d2.chokyo2_flag = '1' THEN d2.chokyo2_yajirushi
+        WHEN d2.chokyo3_flag = '1' THEN d2.chokyo3_yajirushi
+        ELSE NULL
+      END AS chokyo_yajirushi,
+      CASE
+        WHEN d2.chokyo1_flag = '1' THEN d2.chokyo1_reigai
+        WHEN d2.chokyo2_flag = '1' THEN d2.chokyo2_reigai
+        WHEN d2.chokyo3_flag = '1' THEN d2.chokyo3_reigai
+        ELSE NULL
+      END AS chokyo_reigai,
       d2.chokyo_awase,
       d2.chokyo_awase_flag,
       d2.chokyo_tanpyo,
