@@ -29,3 +29,8 @@ declare({
   schema: source_schema,
   name: "kol_ket"
 });
+
+declare({
+  schema: source_schema,
+  name: "kol_com1"
+});
