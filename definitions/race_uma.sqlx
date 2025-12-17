@@ -99,6 +99,7 @@ config {
     chokyo_1f: "調教タイム 1F",
     chokyo_1f_float: "調教タイム 1F (小数点)",
     chokyo_ichidori: "調教位置取り",
+    chokyo_ichidori_furi_win_flag: "調教位置取り不利かつ先着フラグ",
     chokyo_ashiiro: "調教脚色",
     chokyo_ashiiro_label: "調教脚色(ラベル)",
     chokyo_yajirushi: "調教矢印",
@@ -577,6 +578,13 @@ SELECT
   END AS chokyo_1f_float,
 
   z.chokyo_ichidori,
+  CASE
+    WHEN z.chokyo_awase IS NOT NULL AND z.chokyo_awase != ''
+      AND SAFE_CAST(z.chokyo_ichidori AS INT64) BETWEEN 6 AND 9
+      AND z.chokyo_awase LIKE '%先着%'
+    THEN 'はい'
+    ELSE NULL
+  END AS chokyo_ichidori_furi_win_flag,
   z.chokyo_ashiiro,
   CASE z.chokyo_ashiiro
     WHEN '馬なり' THEN '馬なり'
