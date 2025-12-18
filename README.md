@@ -58,6 +58,21 @@ graph TD
 - **バージョン管理**: GitHub
 - **言語**: Python (Cloud Functions), SQL (Dataform), YAML (Cloud Workflows)
 
+## 重要なテーブル定義
+
+### `race.sqlx`
+- KOLの出馬表データ(den1, sei1)を結合し、レースに関する情報を整形したマスターテーブル。
+- 競馬場コードやトラックコードなどをJRA-VAN仕様に正規化。
+
+### `race_uma.sqlx`
+- 出走馬ごとの詳細データを統合した分析用ワイドテーブル。
+- `kol_den2` (出馬表詳細), `kol_sei1`, `kol_sei2` (成績), `kol_ket` (血統) などを結合。
+- **特徴的なロジック**:
+  - `chokyo_awase_*`: 調教テキストから併せ馬の情報を正規表現で抽出。
+  - `chokyo_awase_uma_race_code_kol`: 併せ馬の直近のレースIDを特定。
+  - `chokyo_awase_uma_class`, `chokyo_awase_uma_kaku_kubun`: 併せ馬のクラスと、自身との格付け（格上/同格/格下）を判定。
+  - `chokyo_awase_uma_kakuue_win_flag`: 格上の併せ馬に対して先着したかどうかをフラグ化。
+
 ## ディレクトリ構成
 
 ```
