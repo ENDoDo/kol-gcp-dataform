@@ -874,6 +874,8 @@ SELECT
   END AS chokyo_yajirushi_label,
   z.chokyo_reigai,
   z.chokyo_awase,
+  REGEXP_EXTRACT(z.chokyo_awase, r'^(.+?)に') AS chokyo_awase_uma_bamei,
+  SAFE_CAST(REGEXP_EXTRACT(z.chokyo_awase, r'に(\d+\.\d+)秒') AS FLOAT64) AS chokyo_awase_time_sa_float,
   CASE
     WHEN z.chokyo_awase LIKE '%同入%' OR z.chokyo_awase LIKE '%内併走%' OR z.chokyo_awase LIKE '%外併走%' THEN '併せ同入'
     WHEN z.chokyo_awase LIKE '%遅れ%' THEN '併せ遅れ'
