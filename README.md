@@ -17,9 +17,11 @@ GCSにアップロードされ、BigQueryの生テーブルに格納されたKOL
 ```mermaid
 graph TD
     subgraph "データ取り込み (Ingestion)"
-        A[1. ユーザーがZIPファイルをGCSにアップロード] --> B(GCS Bucket);
-        B -- Eventarcトリガー --> C{Cloud Functions};
-        C -- データをパースしUpsert --> D["BigQuery Raw Tables<br>(kolbi_keiba.*)"];
+        User[ユーザー] -->|1. ZIPファイルをアップロード| GCS(GCS Bucket<br>kol-keiba-bucket);
+        GCS -->|2. Eventarcがファイル作成イベントを検知| CF(Cloud Function<br>unzip-lzh-function);
+        CF -->|3. 処理を実行<br>・ZIP/LZH展開<br>・パース<br>・Upsert| D[(BigQuery Tables<br>kol_keiba.*)];
+        CF -.->|完了後: バックアップへ移動| Backup(backup/ ディレクトリ<br>30日後に自動削除);
+        CF -.->|エラー時: 待避| Unpacked(unpacked/ ディレクトリ);
     end
 
     subgraph "データ変換トリガー (Trigger)"
@@ -36,7 +38,7 @@ graph TD
         D -- ソースとして参照 --> G;
     end
 
-    style A fill:#D5E8D4,stroke:#82B366
+    style GCS fill:#D5E8D4,stroke:#82B366
     style G fill:#DAE8FC,stroke:#6C8EBF
     style W fill:#FFE6CC,stroke:#D79B00
 ```
