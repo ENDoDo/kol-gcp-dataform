@@ -106,6 +106,12 @@ config {
     chokyo_yajirushi_label: "調教矢印(ラベル)",
     chokyo_reigai: "調教例外",
     chokyo_awase: "調教併せ",
+    chokyo_awase_uma_bamei: "調教併せ馬名",
+    chokyo_awase_uma_race_code_uma_kol: "調教併せ馬レースID (過去直近)",
+    chokyo_awase_uma_race_code_kol: "調教併せ馬レースID",
+    chokyo_awase_uma_class: "調教併せ馬クラス",
+    chokyo_awase_uma_kaku_kubun: "調教併せ馬格区分 (格上/同格/格下)",
+    chokyo_awase_time_sa_float: "調教併せ馬とのタイム差",
     chokyo_awase_kubun: "調教併せ区分",
     chokyo_awase_flag: "調教併せフラグ",
     chokyo_awase_flag_label: "調教併せフラグ（ラベル）",
@@ -499,6 +505,7 @@ WITH
         ELSE NULL
       END AS chokyo_reigai,
       d2.chokyo_awase,
+      REGEXP_EXTRACT(d2.chokyo_awase, r'^(.+?)に') AS chokyo_awase_uma_bamei,
       d2.chokyo_awase_flag,
       d2.chokyo_tanpyo,
       d2.chokyo_honsu_course,
@@ -564,6 +571,7 @@ WITH
       k.ketto2_m_bamei,
       k.ketto5_mf_hanshoku_toroku_bango,
       k.ketto5_mf_bamei,
+      d1.kyoso_joken_kubun,
       SAFE_CAST(d1.kyori AS INT64) AS kyori,
       CASE
         WHEN SAFE_CAST(d1.kyori AS INT64) <= 1399 THEN '短距離'
@@ -621,6 +629,19 @@ WITH
       LAG(track_code1_dirtsiba_label, 1) OVER (PARTITION BY ketto_toroku_bango ORDER BY hasso_date) AS track_code1_label_dirtsiba_zensou
     FROM
       base_data
+  ),
+
+  -- 【追加】馬ごとの「その日の直前のレースID」を事前に算出しておく
+  uma_race_history AS (
+    SELECT
+      bamei,
+      race_code_uma_kol,
+      kaisai_nengappi,
+      -- 同一馬の中で日付順に並べ、1つ前のレースコードを取得
+      LAG(race_code_uma_kol) OVER (PARTITION BY bamei ORDER BY kaisai_nengappi ASC) AS prev_race_code
+    FROM
+      ${ref("kol_den2")}
+    -- 同じ日に複数回走ることは通常ないので、日付でソート
   )
 
 -- Final Step: 全ての情報を結合し、最終的なカラムを生成
@@ -874,7 +895,69 @@ SELECT
   END AS chokyo_yajirushi_label,
   z.chokyo_reigai,
   z.chokyo_awase,
-  REGEXP_EXTRACT(z.chokyo_awase, r'^(.+?)に') AS chokyo_awase_uma_bamei,
+  z.chokyo_awase_uma_bamei,
+  h.prev_race_code AS chokyo_awase_uma_race_code_uma_kol,
+  partner_race.race_code_kol AS chokyo_awase_uma_race_code_kol,
+  CASE partner_race.kyoso_joken_kubun
+    WHEN '00001' THEN '新馬'
+    WHEN '00002' THEN '未出走'
+    WHEN '00003' THEN '未勝利'
+    WHEN '00004' THEN 'オープン'
+    WHEN '05000' THEN '1勝クラス'
+    WHEN '10000' THEN '2勝クラス'
+    WHEN '16000' THEN '3勝クラス'
+    ELSE NULL
+  END AS chokyo_awase_uma_class,
+  CASE
+    WHEN partner_race.kyoso_joken_kubun NOT IN ('00004', '16000', '10000', '05000', '00003', '00002', '00001') OR partner_race.kyoso_joken_kubun IS NULL THEN NULL
+    WHEN (
+      CASE partner_race.kyoso_joken_kubun
+        WHEN '00004' THEN 5
+        WHEN '16000' THEN 4
+        WHEN '10000' THEN 3
+        WHEN '05000' THEN 2
+        WHEN '00003' THEN 1
+        WHEN '00002' THEN 1
+        WHEN '00001' THEN 1
+        ELSE 0
+      END
+    ) > (
+      CASE z.kyoso_joken_kubun
+        WHEN '00004' THEN 5
+        WHEN '16000' THEN 4
+        WHEN '10000' THEN 3
+        WHEN '05000' THEN 2
+        WHEN '00003' THEN 1
+        WHEN '00002' THEN 1
+        WHEN '00001' THEN 1
+        ELSE 0
+      END
+    ) THEN '格上'
+    WHEN (
+      CASE partner_race.kyoso_joken_kubun
+        WHEN '00004' THEN 5
+        WHEN '16000' THEN 4
+        WHEN '10000' THEN 3
+        WHEN '05000' THEN 2
+        WHEN '00003' THEN 1
+        WHEN '00002' THEN 1
+        WHEN '00001' THEN 1
+        ELSE 0
+      END
+    ) < (
+      CASE z.kyoso_joken_kubun
+        WHEN '00004' THEN 5
+        WHEN '16000' THEN 4
+        WHEN '10000' THEN 3
+        WHEN '05000' THEN 2
+        WHEN '00003' THEN 1
+        WHEN '00002' THEN 1
+        WHEN '00001' THEN 1
+        ELSE 0
+      END
+    ) THEN '格下'
+    ELSE '同格'
+  END AS chokyo_awase_uma_kaku_kubun,
   SAFE_CAST(REGEXP_EXTRACT(z.chokyo_awase, r'に(\d+\.\d+)秒') AS FLOAT64) AS chokyo_awase_time_sa_float,
   CASE
     WHEN z.chokyo_awase LIKE '%同入%' OR z.chokyo_awase LIKE '%内併走%' OR z.chokyo_awase LIKE '%外併走%' THEN '併せ同入'
@@ -1421,6 +1504,13 @@ SELECT
   CURRENT_TIMESTAMP() AS modified
 FROM
   with_zensou_data AS z
+LEFT JOIN
+  uma_race_history AS h
+  ON z.chokyo_awase_uma_bamei = h.bamei
+  AND z.kaisai_nengappi = h.kaisai_nengappi
+LEFT JOIN
+  ${ref("kol_den1")} AS partner_race
+  ON SUBSTR(h.prev_race_code, 1, 16) = partner_race.race_code_kol
 LEFT JOIN
   ${ref("races_uma_odds_jvd_new")} AS odds
   ON odds.RaceUmaCode = z.race_code_uma_kol
