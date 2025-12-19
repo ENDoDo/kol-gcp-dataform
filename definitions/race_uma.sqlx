@@ -153,7 +153,7 @@ config {
     chokyo1_ichidori: "調教1 調教位置取り",
     chokyo1_ichidori_label: "調教1 調教位置取り(ラベル)",
     chokyo1_ashiiro: "調教1 調教脚色",
-    chokyo1_asiiro_label: "調教1 調教脚色(ラベル)",
+    chokyo1_ashiiro_label: "調教1 調教脚色(ラベル)",
     chokyo1_yajirushi: "調教1 調教矢印",
     chokyo1_yajirushi_label: "調教1 調教矢印(ラベル)",
     chokyo1_reigai: "調教1 調教例外",
@@ -187,7 +187,7 @@ config {
     chokyo2_ichidori: "調教2 調教位置取り",
     chokyo2_ichidori_label: "調教2 調教位置取り(ラベル)",
     chokyo2_ashiiro: "調教2 調教脚色",
-    chokyo2_asiiro_label: "調教2 調教脚色(ラベル)",
+    chokyo2_ashiiro_label: "調教2 調教脚色(ラベル)",
     chokyo2_yajirushi: "調教2 調教矢印",
     chokyo2_yajirushi_label: "調教2 調教矢印(ラベル)",
     chokyo2_reigai: "調教2 調教例外",
@@ -221,7 +221,7 @@ config {
     chokyo3_ichidori: "調教3 調教位置取り",
     chokyo3_ichidori_label: "調教3 調教位置取り(ラベル)",
     chokyo3_ashiiro: "調教3 調教脚色",
-    chokyo3_asiiro_label: "調教3 調教脚色(ラベル)",
+    chokyo3_ashiiro_label: "調教3 調教脚色(ラベル)",
     chokyo3_yajirushi: "調教3 調教矢印",
     chokyo3_yajirushi_label: "調教3 調教矢印(ラベル)",
     chokyo3_reigai: "調教3 調教例外",
@@ -1113,7 +1113,7 @@ SELECT
     WHEN '止める' THEN '止める' WHEN 'バカ付' THEN 'バカ付' WHEN '引掛る' THEN '引掛る' WHEN '末抑え' THEN '末抑え'
     WHEN '直抑え' THEN '直抑え' WHEN '外逃げ' THEN '外逃げ' WHEN 'ヨレる' THEN 'ヨレる'
     ELSE z.chokyo1_ashiiro
-  END AS chokyo1_asiiro_label,
+  END AS chokyo1_ashiiro_label,
   z.chokyo1_yajirushi,
   CASE z.chokyo1_yajirushi
     WHEN '1' THEN '一変(↑)' WHEN '2' THEN '平行(→)' WHEN '3' THEN '下降(↓)' WHEN '4' THEN '良化(／)' WHEN '5' THEN '下降気味(＼)'
@@ -1196,7 +1196,7 @@ SELECT
     WHEN '止める' THEN '止める' WHEN 'バカ付' THEN 'バカ付' WHEN '引掛る' THEN '引掛る' WHEN '末抑え' THEN '末抑え'
     WHEN '直抑え' THEN '直抑え' WHEN '外逃げ' THEN '外逃げ' WHEN 'ヨレる' THEN 'ヨレる'
     ELSE z.chokyo2_ashiiro
-  END AS chokyo2_asiiro_label,
+  END AS chokyo2_ashiiro_label,
   z.chokyo2_yajirushi,
   CASE z.chokyo2_yajirushi
     WHEN '1' THEN '一変(↑)' WHEN '2' THEN '平行(→)' WHEN '3' THEN '下降(↓)' WHEN '4' THEN '良化(／)' WHEN '5' THEN '下降気味(＼)'
@@ -1279,7 +1279,7 @@ SELECT
     WHEN '止める' THEN '止める' WHEN 'バカ付' THEN 'バカ付' WHEN '引掛る' THEN '引掛る' WHEN '末抑え' THEN '末抑え'
     WHEN '直抑え' THEN '直抑え' WHEN '外逃げ' THEN '外逃げ' WHEN 'ヨレる' THEN 'ヨレる'
     ELSE z.chokyo3_ashiiro
-  END AS chokyo3_asiiro_label,
+  END AS chokyo3_ashiiro_label,
   z.chokyo3_yajirushi,
   CASE z.chokyo3_yajirushi
     WHEN '1' THEN '一変(↑)' WHEN '2' THEN '平行(→)' WHEN '3' THEN '下降(↓)' WHEN '4' THEN '良化(／)' WHEN '5' THEN '下降気味(＼)'
