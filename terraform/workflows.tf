@@ -43,7 +43,7 @@ main:
           - workspace: "${var.dataform_workspace_id}"
     - check_paused:
         switch:
-          - condition: ${is_paused}
+          - condition: $${is_paused}
             return: "Paused: Dataform execution skipped."
     - createCompilationResult:
         call: http.post
