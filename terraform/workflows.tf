@@ -38,8 +38,13 @@ main:
   steps:
     - init:
         assign:
+          - is_paused: false  # 停止したい時はここを true に、再開時は false にする
           - repository: "projects/${var.project_id}/locations/${var.region}/repositories/${google_dataform_repository.repository_stg.name}"
           - workspace: "${var.dataform_workspace_id}"
+    - check_paused:
+        switch:
+          - condition: ${is_paused}
+            return: "Paused: Dataform execution skipped."
     - createCompilationResult:
         call: http.post
         args:
