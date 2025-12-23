@@ -99,6 +99,7 @@ config {
     chokyo_1f: "調教タイム 1F",
     chokyo_1f_float: "調教タイム 1F (小数点)",
     chokyo_ichidori: "調教位置取り",
+    chokyo_ichidori_label: "調教位置取り(ラベル)",
     chokyo_ichidori_furi_win_flag: "調教位置取り不利かつ先着フラグ",
     chokyo_ashiiro: "調教脚色",
     chokyo_ashiiro_label: "調教脚色(ラベル)",
@@ -843,6 +844,11 @@ SELECT
   END AS chokyo_1f_float,
 
   z.chokyo_ichidori,
+  CASE z.chokyo_ichidori
+     WHEN '1' THEN '①' WHEN '2' THEN '②' WHEN '3' THEN '③' WHEN '4' THEN '④' WHEN '5' THEN '⑤'
+     WHEN '6' THEN '⑥' WHEN '7' THEN '⑦' WHEN '8' THEN '⑧' WHEN '9' THEN '⑨'
+     ELSE z.chokyo_ichidori
+  END AS chokyo_ichidori_label,
   CASE
     WHEN z.chokyo_awase IS NOT NULL AND z.chokyo_awase != ''
       AND SAFE_CAST(z.chokyo_ichidori AS INT64) BETWEEN 6 AND 9
