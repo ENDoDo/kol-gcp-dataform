@@ -145,6 +145,10 @@ config {
     chokyo1_babajotai: "調教1 調教馬場状態",
     chokyo_check_time_1f_flag: "追い切り 1Fの標準タイムクリア判定のフラグ",
     chokyo_check_time_4f_6f_flag: "追い切り 4F/6Fの標準タイムクリア判定のフラグ",
+    chokyo_5f_wood_kubun: "CW/W 5Fタイム区分",
+    chokyo_4f_wood_kubun: "CW/W 4Fタイム区分",
+    chokyo_1f_wood_kubun: "CW/W 1Fタイム区分",
+    chokyo_4f_hanro_kubun: "坂路 4Fタイム区分",
     chokyo1_hanro_pool_kaisu_int: "調教1 坂路またはプール回数",
     chokyo1_8f: "調教1 調教タイム 8F",
     chokyo1_8f_float: "調教1 調教タイム 8F (小数点)",
@@ -942,6 +946,54 @@ SELECT
     WHEN z.chokyo_basho = '美南' AND z.chokyo_course = 'W' AND SAFE_CAST(z.chokyo_6f_d2 AS FLOAT64) <= 83.9 THEN 'はい'
     ELSE NULL
   END AS chokyo_check_time_4f_6f_flag,
+
+  CASE
+    WHEN (z.chokyo_basho = '栗東' AND z.chokyo_course = 'CW') OR (z.chokyo_basho = '美南' AND z.chokyo_course = 'W') THEN
+      CASE
+        WHEN SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64) >= 70.0 THEN '70.0～'
+        WHEN SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64) >= 68.0 THEN '68.0～69.9'
+        WHEN SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64) >= 66.0 THEN '66.0～67.9'
+        WHEN SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64) >= 64.0 THEN '64.0～65.9'
+        ELSE NULL
+      END
+    ELSE NULL
+  END AS chokyo_5f_wood_kubun,
+
+  CASE
+    WHEN (z.chokyo_basho = '栗東' AND z.chokyo_course = 'CW') OR (z.chokyo_basho = '美南' AND z.chokyo_course = 'W') THEN
+      CASE
+        WHEN SAFE_CAST(z.chokyo_4f_d2 AS FLOAT64) >= 56.0 THEN '56.0～'
+        WHEN SAFE_CAST(z.chokyo_4f_d2 AS FLOAT64) >= 54.0 THEN '54.0～55.9'
+        WHEN SAFE_CAST(z.chokyo_4f_d2 AS FLOAT64) >= 52.0 THEN '52.0～53.9'
+        WHEN SAFE_CAST(z.chokyo_4f_d2 AS FLOAT64) >= 50.0 THEN '50.0～51.9'
+        ELSE NULL
+      END
+    ELSE NULL
+  END AS chokyo_4f_wood_kubun,
+
+  CASE
+    WHEN (z.chokyo_basho = '栗東' AND z.chokyo_course = 'CW') OR (z.chokyo_basho = '美南' AND z.chokyo_course = 'W') THEN
+      CASE
+        WHEN SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) >= 12.5 THEN '12.5～'
+        WHEN SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) >= 12.0 THEN '12.0～12.4'
+        WHEN SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) >= 11.5 THEN '11.5～11.9'
+        WHEN SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) >= 11.0 THEN '11.0～11.4'
+        ELSE NULL
+      END
+    ELSE NULL
+  END AS chokyo_1f_wood_kubun,
+
+  CASE
+    WHEN (z.chokyo_basho = '栗東' OR z.chokyo_basho = '美南') AND z.chokyo_course = '坂' THEN
+      CASE
+        WHEN SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64) >= 56.0 AND SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64) <= 57.9 THEN '56.0～57.9'
+        WHEN SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64) >= 54.0 AND SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64) <= 55.9 THEN '54.0～55.9'
+        WHEN SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64) >= 52.0 AND SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64) <= 53.9 THEN '52.0～53.9'
+        WHEN SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64) >= 50.0 AND SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64) <= 51.9 THEN '50.0～51.9'
+        ELSE NULL
+      END
+    ELSE NULL
+  END AS chokyo_4f_hanro_kubun,
 
   z.chokyo_ichidori,
   CASE z.chokyo_ichidori
