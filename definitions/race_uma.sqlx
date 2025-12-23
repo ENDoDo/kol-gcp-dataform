@@ -105,6 +105,7 @@ config {
     chokyo_lap_4f: "追い切り 4Fラップタイム 4f-3f",
     chokyo_lap_3f: "追い切り 3Fラップタイム 3f-2f",
     chokyo_lap_2f: "追い切り 2Fラップタイム 2f-1f",
+    chokyo_lap_group: "調教ラップグループ A1-B3",
     chokyo_ichidori: "調教位置取り",
     chokyo_ichidori_label: "調教位置取り(ラベル)",
     chokyo_ichidori_furi_win_flag: "調教位置取り不利かつ先着フラグ",
@@ -889,6 +890,32 @@ SELECT
         (SAFE_CAST(z.chokyo_3f_d2 AS FLOAT64) - (SAFE_CAST(z.chokyo_4f_d2 AS FLOAT64) - SAFE_CAST(z.chokyo_3f_d2 AS FLOAT64)))
         - SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64), 1)
   END AS chokyo_lap_2f,
+
+  CASE
+    WHEN z.chokyo_course = '坂' AND (z.chokyo_basho LIKE '%栗東%' OR z.chokyo_basho LIKE '%美南%') THEN
+      CASE
+        -- A3: 終い1F 11秒台の加速ラップ (加速 or 等速)
+        WHEN SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) < 12.0 AND SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) <= SAFE_CAST(z.chokyo_3f_d2 AS FLOAT64) THEN 'A3'
+        -- B3: 2F 11秒台減速ラップ (1Fは12.0以上もありえるが定義上は減速ならB3)
+        WHEN SAFE_CAST(z.chokyo_3f_d2 AS FLOAT64) < 12.0 AND SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) > SAFE_CAST(z.chokyo_3f_d2 AS FLOAT64) THEN 'B3'
+        -- A2: 終い2F各12秒台の加速ラップ
+        WHEN (SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) >= 12.0 AND SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) < 13.0)
+             AND (SAFE_CAST(z.chokyo_3f_d2 AS FLOAT64) >= 12.0 AND SAFE_CAST(z.chokyo_3f_d2 AS FLOAT64) < 13.0)
+             AND SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) <= SAFE_CAST(z.chokyo_3f_d2 AS FLOAT64) THEN 'A2'
+        -- B2: 終い2F各12秒台の減速ラップ
+        WHEN (SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) >= 12.0 AND SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) < 13.0)
+             AND (SAFE_CAST(z.chokyo_3f_d2 AS FLOAT64) >= 12.0 AND SAFE_CAST(z.chokyo_3f_d2 AS FLOAT64) < 13.0)
+             AND SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) > SAFE_CAST(z.chokyo_3f_d2 AS FLOAT64) THEN 'B2'
+        -- A1: 終い1Fのみ12秒台の加速ラップ (2Fは13.0以上)
+        WHEN (SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) >= 12.0 AND SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) < 13.0)
+             AND SAFE_CAST(z.chokyo_3f_d2 AS FLOAT64) >= 13.0 THEN 'A1'
+        -- B1: 2Fのみ12秒台の減速ラップ (1Fは13.0以上)
+        WHEN (SAFE_CAST(z.chokyo_3f_d2 AS FLOAT64) >= 12.0 AND SAFE_CAST(z.chokyo_3f_d2 AS FLOAT64) < 13.0)
+             AND SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) >= 13.0 THEN 'B1'
+        ELSE NULL
+      END
+    ELSE NULL
+  END AS chokyo_lap_group,
 
   z.chokyo_ichidori,
   CASE z.chokyo_ichidori

@@ -104,6 +104,7 @@ config {
     chokyo_lap_4f: "追い切り 4Fラップタイム 4f-3f",
     chokyo_lap_3f: "追い切り 3Fラップタイム 3f-2f",
     chokyo_lap_2f: "追い切り 2Fラップタイム 2f-1f",
+    chokyo_lap_group: "調教ラップグループ A1-B3",
     chokyo_ichidori: "調教位置取り",
     chokyo_ichidori_label: "調教位置取り(ラベル)",
     chokyo_ashiiro: "調教脚色",
