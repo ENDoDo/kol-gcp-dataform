@@ -143,6 +143,8 @@ config {
     chokyo1_course_kubun: "調教1 調教コース区分",
     chokyo1_basho_course_label: "調教1 調教場所・コース",
     chokyo1_babajotai: "調教1 調教馬場状態",
+    chokyo_check_time_1f_flag: "追い切り 1Fの標準タイムクリア判定のフラグ",
+    chokyo_check_time_4f_6f_flag: "追い切り 4F/6Fの標準タイムクリア判定のフラグ",
     chokyo1_hanro_pool_kaisu_int: "調教1 坂路またはプール回数",
     chokyo1_8f: "調教1 調教タイム 8F",
     chokyo1_8f_float: "調教1 調教タイム 8F (小数点)",
@@ -916,6 +918,30 @@ SELECT
       END
     ELSE NULL
   END AS chokyo_lap_group,
+
+  CASE
+    -- 栗東坂: 1F <= 12.4
+    WHEN z.chokyo_basho = '栗東' AND z.chokyo_course = '坂' AND SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) <= 12.4 THEN 'はい'
+    -- 美南坂: 1F <= 12.5
+    WHEN z.chokyo_basho = '美南' AND z.chokyo_course = '坂' AND SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) <= 12.5 THEN 'はい'
+    -- 栗東CW: 1F <= 11.6
+    WHEN z.chokyo_basho = '栗東' AND z.chokyo_course = 'CW' AND SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) <= 11.6 THEN 'はい'
+    -- 美南W: 1F <= 11.7
+    WHEN z.chokyo_basho = '美南' AND z.chokyo_course = 'W' AND SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) <= 11.7 THEN 'はい'
+    ELSE NULL
+  END AS chokyo_check_time_1f_flag,
+
+  CASE
+    -- 栗東坂: 4F <= 53.9 (坂路の4F判定には chokyo_5f_d2 を使用 ※中身は実質4Fデータ)
+    WHEN z.chokyo_basho = '栗東' AND z.chokyo_course = '坂' AND SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64) <= 53.9 THEN 'はい'
+    -- 美南坂: 4F <= 54.9
+    WHEN z.chokyo_basho = '美南' AND z.chokyo_course = '坂' AND SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64) <= 54.9 THEN 'はい'
+    -- 栗東CW: 6F <= 82.9
+    WHEN z.chokyo_basho = '栗東' AND z.chokyo_course = 'CW' AND SAFE_CAST(z.chokyo_6f_d2 AS FLOAT64) <= 82.9 THEN 'はい'
+    -- 美南W: 6F <= 83.9
+    WHEN z.chokyo_basho = '美南' AND z.chokyo_course = 'W' AND SAFE_CAST(z.chokyo_6f_d2 AS FLOAT64) <= 83.9 THEN 'はい'
+    ELSE NULL
+  END AS chokyo_check_time_4f_6f_flag,
 
   z.chokyo_ichidori,
   CASE z.chokyo_ichidori
