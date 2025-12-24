@@ -931,7 +931,7 @@ SELECT
     -- 栗東CW: 1F <= 11.6
     WHEN z.chokyo_basho = '栗東' AND z.chokyo_course = 'CW' AND SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) <= 11.6 THEN 'はい'
     -- 美南W: 1F <= 11.7
-    WHEN z.chokyo_basho = '美南' AND z.chokyo_course = 'W' AND SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) <= 11.7 THEN 'はい'
+    WHEN z.chokyo_basho = '美南' AND z.chokyo_course = 'Ｗ' AND SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) <= 11.7 THEN 'はい'
     ELSE NULL
   END AS chokyo_check_time_1f_flag,
 
@@ -943,12 +943,12 @@ SELECT
     -- 栗東CW: 6F <= 82.9
     WHEN z.chokyo_basho = '栗東' AND z.chokyo_course = 'CW' AND SAFE_CAST(z.chokyo_6f_d2 AS FLOAT64) <= 82.9 THEN 'はい'
     -- 美南W: 6F <= 83.9
-    WHEN z.chokyo_basho = '美南' AND z.chokyo_course = 'W' AND SAFE_CAST(z.chokyo_6f_d2 AS FLOAT64) <= 83.9 THEN 'はい'
+    WHEN z.chokyo_basho = '美南' AND z.chokyo_course = 'Ｗ' AND SAFE_CAST(z.chokyo_6f_d2 AS FLOAT64) <= 83.9 THEN 'はい'
     ELSE NULL
   END AS chokyo_check_time_4f_6f_flag,
 
   CASE
-    WHEN (z.chokyo_basho = '栗東' AND z.chokyo_course = 'CW') OR (z.chokyo_basho = '美南' AND z.chokyo_course = 'W') THEN
+    WHEN (z.chokyo_basho = '栗東' AND z.chokyo_course = 'CW') OR (z.chokyo_basho = '美南' AND z.chokyo_course = 'Ｗ') THEN
       CASE
         WHEN SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64) >= 70.0 THEN '70.0～'
         WHEN SAFE_CAST(z.chokyo_5f_d2 AS FLOAT64) >= 68.0 THEN '68.0～69.9'
@@ -960,7 +960,7 @@ SELECT
   END AS chokyo_5f_wood_kubun,
 
   CASE
-    WHEN (z.chokyo_basho = '栗東' AND z.chokyo_course = 'CW') OR (z.chokyo_basho = '美南' AND z.chokyo_course = 'W') THEN
+    WHEN (z.chokyo_basho = '栗東' AND z.chokyo_course = 'CW') OR (z.chokyo_basho = '美南' AND z.chokyo_course = 'Ｗ') THEN
       CASE
         WHEN SAFE_CAST(z.chokyo_4f_d2 AS FLOAT64) >= 56.0 THEN '56.0～'
         WHEN SAFE_CAST(z.chokyo_4f_d2 AS FLOAT64) >= 54.0 THEN '54.0～55.9'
@@ -972,7 +972,7 @@ SELECT
   END AS chokyo_4f_wood_kubun,
 
   CASE
-    WHEN (z.chokyo_basho = '栗東' AND z.chokyo_course = 'CW') OR (z.chokyo_basho = '美南' AND z.chokyo_course = 'W') THEN
+    WHEN (z.chokyo_basho = '栗東' AND z.chokyo_course = 'CW') OR (z.chokyo_basho = '美南' AND z.chokyo_course = 'Ｗ') THEN
       CASE
         WHEN SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) >= 12.5 THEN '12.5～'
         WHEN SAFE_CAST(z.chokyo_1f_d2 AS FLOAT64) >= 12.0 THEN '12.0～12.4'
