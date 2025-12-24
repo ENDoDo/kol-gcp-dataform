@@ -778,6 +778,7 @@ SELECT
   z.chokyo_course,
   CASE
     WHEN z.chokyo_course = '坂' THEN '坂路'
+    WHEN z.chokyo_course = 'Ｐ' OR z.chokyo_course = 'P' THEN 'ポリトラック'
     WHEN z.chokyo_basho = 'プール' THEN 'プール'
     ELSE 'コース'
   END AS chokyo_course_kubun,
@@ -1203,6 +1204,7 @@ SELECT
   z.chokyo1_course,
   CASE
     WHEN z.chokyo1_course = '坂' THEN '坂路'
+    WHEN z.chokyo1_course = 'Ｐ' OR z.chokyo1_course = 'P' THEN 'ポリトラック'
     WHEN z.chokyo1_basho = 'プール' THEN 'プール'
     ELSE 'コース'
   END AS chokyo1_course_kubun,
@@ -1289,6 +1291,7 @@ SELECT
   z.chokyo2_course,
   CASE
     WHEN z.chokyo2_course = '坂' THEN '坂路'
+    WHEN z.chokyo2_course = 'Ｐ' OR z.chokyo2_course = 'P' THEN 'ポリトラック'
     WHEN z.chokyo2_basho = 'プール' THEN 'プール'
     ELSE 'コース'
   END AS chokyo2_course_kubun,
@@ -1372,6 +1375,7 @@ SELECT
   z.chokyo3_course,
   CASE
     WHEN z.chokyo3_course = '坂' THEN '坂路'
+    WHEN z.chokyo3_course = 'Ｐ' OR z.chokyo3_course = 'P' THEN 'ポリトラック'
     WHEN z.chokyo3_basho = 'プール' THEN 'プール'
     ELSE 'コース'
   END AS chokyo3_course_kubun,
