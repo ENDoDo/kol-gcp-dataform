@@ -70,8 +70,45 @@ main:
             invocationConfig:
               serviceAccount: "dataform-runner-stg@${var.project_id}.iam.gserviceaccount.com"
         result: workflowInvocation
+    # Dataform実行完了を待つロジックが必要だが、非同期呼出のままにするか、Dataform完了をポーリングするか。
+    # 既存コードはInvocation作成だけしてリターンしているため、Dataformの完了を待っていない。
+    # しかし、scheduleテーブルが更新された「後」にExportしたいなら、Dataformの完了を待つ必要がある。
+    # ここでは既存Workflowの振る舞いに従い、Triggerのみを行うか、それとも待機するか？
+    # Use Case: "Export added or updated records... whenever the table is updated."
+    # The table is updated BY Dataform. So we MUST wait for Dataform to finish.
+    # Current workflow only triggers Dataform.
+    # To properly implement "Export after Update", we need to wait for Dataform completion.
+    # Let's add polling logic.
+    - waitForDataform:
+        call: sys.sleep
+        args:
+          seconds: 30
+    - checkDataformStatus:
+        call: http.get
+        args:
+          url: $${"https://dataform.googleapis.com/v1beta1/" + workflowInvocation.body.name}
+          auth:
+            type: OAuth2
+        result: dataformStatus
+    - switchStatus:
+        switch:
+          - condition: $${dataformStatus.body.state == "RUNNING" or dataformStatus.body.state == "CANCELING"}
+            next: waitForDataform
+          - condition: $${dataformStatus.body.state == "SUCCEEDED"}
+            next: callExportScheduleFunction
+          - condition: true
+            return: $${"Dataform failed with state " + dataformStatus.body.state}
+    - callExportScheduleFunction:
+        call: http.post
+        args:
+          url: "${google_cloudfunctions2_function.export_schedules.service_config[0].uri}"
+          auth:
+            type: OIDC
+        result: exportResult
     - returnResult:
-        return: $${workflowInvocation}
+        return:
+          dataform: $${dataformStatus.body}
+          export: $${exportResult.body}
 EOF
 }
 
@@ -116,7 +153,36 @@ main:
             invocationConfig:
               serviceAccount: "dataform-runner@${var.project_id}.iam.gserviceaccount.com"
         result: workflowInvocation
+    # Dataform完了待機
+    - waitForDataform:
+        call: sys.sleep
+        args:
+          seconds: 30
+    - checkDataformStatus:
+        call: http.get
+        args:
+          url: $${"https://dataform.googleapis.com/v1beta1/" + workflowInvocation.body.name}
+          auth:
+            type: OAuth2
+        result: dataformStatus
+    - switchStatus:
+        switch:
+          - condition: $${dataformStatus.body.state == "RUNNING" or dataformStatus.body.state == "CANCELING"}
+            next: waitForDataform
+          - condition: $${dataformStatus.body.state == "SUCCEEDED"}
+            next: callExportScheduleFunction
+          - condition: true
+            return: $${"Dataform failed with state " + dataformStatus.body.state}
+    - callExportScheduleFunction:
+        call: http.post
+        args:
+          url: "${google_cloudfunctions2_function.export_schedules.service_config[0].uri}"
+          auth:
+            type: OIDC
+        result: exportResult
     - returnResult:
-        return: $${workflowInvocation}
+        return:
+          dataform: $${dataformStatus.body}
+          export: $${exportResult.body}
 EOF
 }
