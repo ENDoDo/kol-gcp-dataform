@@ -129,18 +129,22 @@ def export_schedules(request):
         if not updates:
             return "更新はありませんでした。", 200
 
-        # 5. CSV生成
-        logger.info("CSVを生成中...")
-        csv_buffer = io.StringIO()
-        # スキーマに合わせたフィールド順序
-        fieldnames = ["id", "year", "month_day", "period1_start", "period2_end", "modified", "created"]
-        writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(updates)
-        csv_content = csv_buffer.getvalue().encode('utf-8')
+        # 5. CSV生成とFTPアップロード
+        CHUNK_SIZE = 1000
+        table_name = "schedule"
 
-        # 6. FTPへのアップロード
-        logger.info(f"FTPホスト {FTP_HOST} へアップロード中...")
+        # 更新データ(updates)からMin/Maxの日付(id)を取得
+        # updates内のidはYYYYMMDD形式であることを前提とする
+        all_ids = [u["id"] for u in updates]
+        min_date = min(all_ids)
+        max_date = max(all_ids)
+
+        # データをチャンクに分割
+        chunks = [updates[i:i + CHUNK_SIZE] for i in range(0, len(updates), CHUNK_SIZE)]
+        total_parts = len(chunks)
+
+        logger.info(f"FTPホスト {FTP_HOST} へアップロード中... (合計 {len(updates)} 件 - {total_parts} ファイル)")
+
         try:
             with ftplib.FTP(FTP_HOST) as ftp:
                 ftp.login(user=ftp_user, passwd=ftp_pass)
@@ -154,12 +158,29 @@ def export_schedules(request):
                     except ftplib.error_perm as e:
                         logger.warning(f"ディレクトリ {ftp_directory} への移動に失敗しました: {e}。ルートディレクトリを使用します。")
 
-                # タイムスタンプ付きのファイル名を使用して履歴を残す
-                filename = f"schedules_updates_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.csv"
+                for i, chunk in enumerate(chunks):
+                    # ファイル名の生成
+                    if total_parts > 1:
+                        # 分割あり: {table_name}_{from}_{to}_part{NNN}.csv
+                        part_num = i + 1
+                        filename = f"{table_name}_{min_date}_{max_date}_part{part_num:03d}.csv"
+                    else:
+                        # 分割なし: {table_name}_{from}_{to}.csv
+                        filename = f"{table_name}_{min_date}_{max_date}.csv"
 
-                bio = io.BytesIO(csv_content)
-                ftp.storbinary(f"STOR {filename}", bio)
-                logger.info(f"{filename} のアップロードに成功しました。")
+                    logger.info(f"CSVを生成中... ({filename})")
+                    csv_buffer = io.StringIO()
+                    # スキーマに合わせたフィールド順序
+                    fieldnames = ["id", "year", "month_day", "period1_start", "period2_end", "modified", "created"]
+                    writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(chunk)
+                    csv_content = csv_buffer.getvalue().encode('utf-8')
+
+                    bio = io.BytesIO(csv_content)
+                    ftp.storbinary(f"STOR {filename}", bio)
+                    logger.info(f"{filename} のアップロードに成功しました。")
+
         except Exception as e:
             logger.error(f"FTPアップロードに失敗しました: {e}")
             return f"FTPアップロード失敗: {e}", 500
