@@ -114,7 +114,16 @@ def export_schedules(request):
                 "created": row["created"]
             }
 
-            current_hash = calculate_hash(row_data)
+            # ハッシュ計算用データ（タイムスタンプは毎回変わるため除外）
+            hash_data = {
+                "id": row["id"],
+                "year": row["year"],
+                "month_day": row["month_day"],
+                "period1_start": row["period1_start"],
+                "period2_end": row["period2_end"]
+            }
+
+            current_hash = calculate_hash(hash_data)
             old_hash = row["old_hash"]
 
             if old_hash is None or current_hash != old_hash:
