@@ -79,7 +79,7 @@ def export_schedules(request):
             WITH CurrentSchedules AS (
                 SELECT
                     *
-                FROM `{PROJECT_ID}.{DATASET_ID}.schedules`
+                FROM `{PROJECT_ID}.{DATASET_ID}.schedule`
             ),
             State AS (
                 SELECT
