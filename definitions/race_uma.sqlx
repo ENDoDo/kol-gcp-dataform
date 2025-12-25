@@ -648,24 +648,25 @@ WITH
   ),
 
   -- 【追加】馬ごとの「その日の直前のレースID」を事前に算出しておく
-  pre_final AS (
+  partner_lookup AS (
     SELECT
-      z.*,
-      (
-        SELECT AS STRUCT
-          p.race_code_uma_kol,
-          SUBSTR(p.race_code_uma_kol, 1, 16) AS race_code_kol,
-          d1.kyoso_joken_kubun
-        FROM ${ref("kol_den2")} AS p
-        JOIN ${ref("kol_den1")} AS d1
-          ON SUBSTR(p.race_code_uma_kol, 1, 16) = d1.race_code_kol
-        WHERE p.bamei = z.chokyo_awase_uma_bamei
-          AND p.kaisai_nengappi < z.kaisai_nengappi
-        ORDER BY p.kaisai_nengappi DESC
-        LIMIT 1
-      ) AS partner_info
+      z.race_code_uma_kol,
+      p.race_code_uma_kol AS race_code_uma_kol_partner,
+      SUBSTR(p.race_code_uma_kol, 1, 16) AS race_code_kol_partner,
+      d1.kyoso_joken_kubun
     FROM
       with_zensou_data AS z
+    INNER JOIN
+      ${ref("kol_den2")} AS p
+      ON z.chokyo_awase_uma_bamei = p.bamei
+    LEFT JOIN
+      ${ref("kol_den1")} AS d1
+      ON SUBSTR(p.race_code_uma_kol, 1, 16) = d1.race_code_kol
+    WHERE
+      z.chokyo_awase_uma_bamei IS NOT NULL AND z.chokyo_awase_uma_bamei != ''
+      AND p.kaisai_nengappi < z.kaisai_nengappi
+    QUALIFY
+      ROW_NUMBER() OVER (PARTITION BY z.race_code_uma_kol ORDER BY p.kaisai_nengappi DESC) = 1
   )
 
 -- Final Step: 全ての情報を結合し、最終的なカラムを生成
@@ -1064,9 +1065,9 @@ SELECT
   z.chokyo_reigai,
   z.chokyo_awase,
   z.chokyo_awase_uma_bamei,
-  z.partner_info.race_code_uma_kol AS chokyo_awase_uma_race_code_uma_kol,
-  z.partner_info.race_code_kol AS chokyo_awase_uma_race_code_kol,
-  CASE z.partner_info.kyoso_joken_kubun
+  pl.race_code_uma_kol_partner AS chokyo_awase_uma_race_code_uma_kol,
+  pl.race_code_kol_partner AS chokyo_awase_uma_race_code_kol,
+  CASE pl.kyoso_joken_kubun
     WHEN '00001' THEN '新馬'
     WHEN '00002' THEN '未出走'
     WHEN '00003' THEN '未勝利'
@@ -1077,9 +1078,9 @@ SELECT
     ELSE NULL
   END AS chokyo_awase_uma_class,
   CASE
-    WHEN z.partner_info.kyoso_joken_kubun NOT IN ('00004', '16000', '10000', '05000', '00003', '00002', '00001') OR z.partner_info.kyoso_joken_kubun IS NULL THEN NULL
+    WHEN pl.kyoso_joken_kubun NOT IN ('00004', '16000', '10000', '05000', '00003', '00002', '00001') OR pl.kyoso_joken_kubun IS NULL THEN NULL
     WHEN (
-      CASE z.partner_info.kyoso_joken_kubun
+      CASE pl.kyoso_joken_kubun
         WHEN '00004' THEN 5
         WHEN '16000' THEN 4
         WHEN '10000' THEN 3
@@ -1102,7 +1103,7 @@ SELECT
       END
     ) THEN '格上'
     WHEN (
-      CASE z.partner_info.kyoso_joken_kubun
+      CASE pl.kyoso_joken_kubun
         WHEN '00004' THEN 5
         WHEN '16000' THEN 4
         WHEN '10000' THEN 3
@@ -1129,9 +1130,9 @@ SELECT
   CASE
     WHEN (
       CASE
-        WHEN z.partner_info.kyoso_joken_kubun NOT IN ('00004', '16000', '10000', '05000', '00003', '00002', '00001') OR z.partner_info.kyoso_joken_kubun IS NULL THEN NULL
+        WHEN pl.kyoso_joken_kubun NOT IN ('00004', '16000', '10000', '05000', '00003', '00002', '00001') OR pl.kyoso_joken_kubun IS NULL THEN NULL
         WHEN (
-          CASE z.partner_info.kyoso_joken_kubun
+          CASE pl.kyoso_joken_kubun
             WHEN '00004' THEN 5
             WHEN '16000' THEN 4
             WHEN '10000' THEN 3
@@ -1729,7 +1730,10 @@ SELECT
   CURRENT_TIMESTAMP() AS created,
   CURRENT_TIMESTAMP() AS modified
 FROM
-  pre_final AS z
+  with_zensou_data AS z
+LEFT JOIN
+  partner_lookup AS pl
+  ON z.race_code_uma_kol = pl.race_code_uma_kol
 
 LEFT JOIN
   ${ref("races_uma_odds_jvd_new")} AS odds
