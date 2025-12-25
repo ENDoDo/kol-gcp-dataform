@@ -104,11 +104,19 @@ main:
           url: "${google_cloudfunctions2_function.export_schedules.service_config[0].uri}"
           auth:
             type: OIDC
-        result: exportResult
+        result: exportScheduleResult
+    - callExportRacesFunction:
+        call: http.post
+        args:
+          url: "${google_cloudfunctions2_function.export_races.service_config[0].uri}"
+          auth:
+            type: OIDC
+        result: exportRacesResult
     - returnResult:
         return:
           dataform: $${dataformStatus.body}
-          export: $${exportResult.body}
+          exportSchedule: $${exportScheduleResult.body}
+          exportRaces: $${exportRacesResult.body}
 EOF
 }
 
@@ -179,10 +187,18 @@ main:
           url: "${google_cloudfunctions2_function.export_schedules.service_config[0].uri}"
           auth:
             type: OIDC
-        result: exportResult
+        result: exportScheduleResult
+    - callExportRacesFunction:
+        call: http.post
+        args:
+          url: "${google_cloudfunctions2_function.export_races.service_config[0].uri}"
+          auth:
+            type: OIDC
+        result: exportRacesResult
     - returnResult:
         return:
           dataform: $${dataformStatus.body}
-          export: $${exportResult.body}
+          exportSchedule: $${exportScheduleResult.body}
+          exportRaces: $${exportRacesResult.body}
 EOF
 }

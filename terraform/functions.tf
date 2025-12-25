@@ -96,3 +96,72 @@ resource "google_cloud_run_service_iam_member" "workflows_invoker" {
 output "export_schedules_function_uri" {
   value = google_cloudfunctions2_function.export_schedules.service_config[0].uri
 }
+
+# -----------------------------------------------------------------------------
+# レースエクスポート用 Cloud Function
+# -----------------------------------------------------------------------------
+
+# --- ソースコードのアーカイブ ---
+data "archive_file" "export_races_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/../functions/export_races"
+  output_path = "${path.module}/../functions/export_races.zip"
+}
+
+# --- ソースコードのアップロード ---
+resource "google_storage_bucket_object" "export_races_object" {
+  name   = "export_races-${data.archive_file.export_races_zip.output_md5}.zip"
+  bucket = google_storage_bucket.function_source_bucket.name
+  source = data.archive_file.export_races_zip.output_path
+}
+
+# --- Cloud Function Gen2 ---
+resource "google_cloudfunctions2_function" "export_races" {
+  name        = "export-races-function${local.env_suffix}"
+  location    = var.region
+  description = "Exports race updates to FTP"
+  project     = var.project_id
+
+  build_config {
+    runtime     = "python311"
+    entry_point = "export_races"
+    source {
+      storage_source {
+        bucket = google_storage_bucket.function_source_bucket.name
+        object = google_storage_bucket_object.export_races_object.name
+      }
+    }
+  }
+
+  service_config {
+    max_instance_count = 1
+    available_memory   = "512M"
+    timeout_seconds    = 540
+    environment_variables = {
+      PROJECT_ID  = var.project_id
+      DATASET_ID  = terraform.workspace == "prd" ? var.prd_schema : var.stg_schema
+      SECRET_USER = "projects/56638639323/secrets/kol_ftp_bubble_username"
+      SECRET_PASS = "projects/56638639323/secrets/kol_ftp_bubble_password"
+      FTP_DIRECTORY = terraform.workspace == "prd" ? "/production" : "/development"
+    }
+    service_account_email = google_service_account.export_schedules_sa.email # 同じSAを使用
+  }
+
+  depends_on = [
+      google_project_iam_member.export_schedules_bq_editor,
+      google_project_iam_member.export_schedules_bq_job_user
+  ]
+}
+
+# Workflows SAにCloud Function呼び出し権限を付与
+resource "google_cloud_run_service_iam_member" "workflows_invoker_races" {
+  project  = var.project_id
+  location = var.region
+  service  = google_cloudfunctions2_function.export_races.service_config[0].service
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${google_service_account.workflows_sa.email}"
+}
+
+output "export_races_function_uri" {
+  value = google_cloudfunctions2_function.export_races.service_config[0].uri
+}
