@@ -72,6 +72,7 @@ resource "google_cloudfunctions2_function" "export_schedules" {
       DATASET_ID  = terraform.workspace == "prd" ? var.prd_schema : var.stg_schema
       SECRET_USER = "projects/56638639323/secrets/kol_ftp_bubble_username"
       SECRET_PASS = "projects/56638639323/secrets/kol_ftp_bubble_password"
+      FTP_DIRECTORY = terraform.workspace == "prd" ? "/production" : "/development"
     }
     service_account_email = google_service_account.export_schedules_sa.email
   }

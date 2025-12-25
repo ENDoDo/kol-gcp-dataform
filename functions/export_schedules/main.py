@@ -144,6 +144,16 @@ def export_schedules(request):
         try:
             with ftplib.FTP(FTP_HOST) as ftp:
                 ftp.login(user=ftp_user, passwd=ftp_pass)
+
+                # ディレクトリ移動
+                ftp_directory = os.environ.get("FTP_DIRECTORY")
+                if ftp_directory:
+                    try:
+                        ftp.cwd(ftp_directory)
+                        logger.info(f"FTPディレクトリを {ftp_directory} に変更しました。")
+                    except ftplib.error_perm as e:
+                        logger.warning(f"ディレクトリ {ftp_directory} への移動に失敗しました: {e}。ルートディレクトリを使用します。")
+
                 # タイムスタンプ付きのファイル名を使用して履歴を残す
                 filename = f"schedules_updates_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.csv"
 
