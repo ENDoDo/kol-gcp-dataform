@@ -1155,7 +1155,7 @@ SELECT
           END
         ) THEN '格上'
         WHEN (
-          CASE z.partner_info.kyoso_joken_kubun
+          CASE pl.kyoso_joken_kubun
             WHEN '00004' THEN 5
             WHEN '16000' THEN 4
             WHEN '10000' THEN 3
