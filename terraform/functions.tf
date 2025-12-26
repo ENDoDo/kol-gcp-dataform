@@ -177,6 +177,15 @@ output "export_race_uma_details_function_uri" {
   value = google_cloudfunctions2_function.export_race_uma_details.service_config[0].uri
 }
 
+# Workflows SAにCloud Function呼び出し権限を付与
+resource "google_cloud_run_service_iam_member" "workflows_invoker_race_uma_details" {
+  project  = var.project_id
+  location = var.region
+  service  = google_cloudfunctions2_function.export_race_uma_details.service_config[0].service
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${google_service_account.workflows_sa.email}"
+}
+
 # -----------------------------------------------------------------------------
 # レースエクスポート用 Cloud Function
 # -----------------------------------------------------------------------------
