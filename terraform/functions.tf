@@ -98,6 +98,86 @@ output "export_schedules_function_uri" {
 }
 
 # -----------------------------------------------------------------------------
+# レース詳細エクスポート用 Cloud Function
+# -----------------------------------------------------------------------------
+
+# --- サービスアカウント ---
+resource "google_service_account" "export_race_uma_details_sa" {
+  account_id   = "export-race-uma-details-sa${local.env_suffix}"
+  display_name = "SA for Race Uma Details Export Function${local.env_suffix}"
+  project      = var.project_id
+}
+
+# --- SA用 IAM ロール ---
+resource "google_project_iam_member" "export_race_uma_details_bq_editor" {
+  project = var.project_id
+  role    = "roles/bigquery.dataEditor"
+  member  = "serviceAccount:${google_service_account.export_race_uma_details_sa.email}"
+}
+
+resource "google_project_iam_member" "export_race_uma_details_bq_job_user" {
+  project = var.project_id
+  role    = "roles/bigquery.jobUser"
+  member  = "serviceAccount:${google_service_account.export_race_uma_details_sa.email}"
+}
+
+# --- ソースコードのアーカイブ ---
+data "archive_file" "export_race_uma_details_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/../functions/export_race_uma_details"
+  output_path = "${path.module}/../functions/export_race_uma_details.zip"
+}
+
+# --- ソースコードのアップロード ---
+resource "google_storage_bucket_object" "export_race_uma_details_object" {
+  name   = "export_race_uma_details-${data.archive_file.export_race_uma_details_zip.output_md5}.zip"
+  bucket = google_storage_bucket.function_source_bucket.name
+  source = data.archive_file.export_race_uma_details_zip.output_path
+}
+
+# --- Cloud Function Gen2 ---
+resource "google_cloudfunctions2_function" "export_race_uma_details" {
+  name        = "export-race-uma-details-function${local.env_suffix}"
+  location    = var.region
+  description = "Exports race uma details (delta) to FTP"
+  project     = var.project_id
+
+  build_config {
+    runtime     = "python311"
+    entry_point = "export_race_uma_details"
+    source {
+      storage_source {
+        bucket = google_storage_bucket.function_source_bucket.name
+        object = google_storage_bucket_object.export_race_uma_details_object.name
+      }
+    }
+  }
+
+  service_config {
+    max_instance_count = 1
+    available_memory   = "2048M" # データ量が多い可能性があるためメモリを増やす
+    timeout_seconds    = 540
+    environment_variables = {
+      PROJECT_ID  = var.project_id
+      DATASET_ID  = terraform.workspace == "prd" ? var.prd_schema : var.stg_schema
+      SECRET_USER = "projects/56638639323/secrets/kol_ftp_bubble_username"
+      SECRET_PASS = "projects/56638639323/secrets/kol_ftp_bubble_password"
+    }
+    service_account_email = google_service_account.export_race_uma_details_sa.email
+  }
+
+  depends_on = [
+      google_project_iam_member.export_race_uma_details_bq_editor,
+      google_project_iam_member.export_race_uma_details_bq_job_user
+  ]
+}
+
+# Workflows用に出力するURI
+output "export_race_uma_details_function_uri" {
+  value = google_cloudfunctions2_function.export_race_uma_details.service_config[0].uri
+}
+
+# -----------------------------------------------------------------------------
 # レースエクスポート用 Cloud Function
 # -----------------------------------------------------------------------------
 
