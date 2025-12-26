@@ -271,6 +271,9 @@ config {
     // --- タイムスタンプ ---
     created: "データ作成日時",
     modified: "データ更新日時"
+  },
+  bigquery: {
+    partitionBy: "DATE(hasso_date)"
   }
 }
 

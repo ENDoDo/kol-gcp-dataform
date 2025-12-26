@@ -356,6 +356,9 @@ config {
     // タイムスタンプ
     created: "データ作成日時",
     modified: "データ更新日時"
+  },
+  bigquery: {
+    partitionBy: "DATE(hasso_date)"
   }
 }
 
@@ -375,7 +378,7 @@ WITH
       d2.race_num,
       d2.umaban,
       d2.ketto_toroku_bango,
-      FORMAT_DATETIME('%Y/%m/%d %H:%M:%S', PARSE_DATETIME('%Y%m%d%H%M', d2.kaisai_nengappi || REPLACE(d1.hasso_jikoku, ':', ''))) AS hasso_date,
+      PARSE_DATETIME('%Y%m%d%H%M', d2.kaisai_nengappi || REPLACE(d1.hasso_jikoku, ':', '')) AS hasso_date,
       d2.wakuban,
       d2.bamei,
       d2.seibetsu_code,

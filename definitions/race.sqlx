@@ -65,6 +65,9 @@ config {
     keibajo_straight_long_flag: "東京芝、阪神芝外回り、新潟芝外回りの場合に「はい」",
     created: "データ作成日時",
     modified: "データ更新日時"
+  },
+  bigquery: {
+    partitionBy: "DATE(hasso_date)"
   }
 }
 
@@ -92,7 +95,7 @@ WITH
 SELECT
   d1.race_code_kol,
   d1.kaisai_nengappi || d1.keibajo_code_jvd_from_kol || d1.kaisai_kaiji || d1.kaisai_nichiji || d1.race_num AS race_code_jvd,
-  FORMAT_DATETIME('%Y/%m/%d %H:%M:%S', PARSE_DATETIME('%Y%m%d%H%M', d1.kaisai_nengappi || REPLACE(d1.hasso_jikoku, ':', ''))) AS hasso_date,
+  PARSE_DATETIME('%Y%m%d%H%M', d1.kaisai_nengappi || REPLACE(d1.hasso_jikoku, ':', '')) AS hasso_date,
   d1.kaisai_kaiji AS kaiji,
   d1.kaisai_nichiji AS nichiji,
   d1.race_num AS race_bango,
