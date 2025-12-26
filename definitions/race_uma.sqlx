@@ -801,17 +801,22 @@ WITH
   shirushi_final AS (
     SELECT
       *,
-      CASE shirushi_kubun_rank
-        WHEN 1 THEN '◎'
-        WHEN 2 THEN '○'
-        WHEN 3 THEN '▲'
-        WHEN 4 THEN '△'
-        WHEN 5 THEN '★'
-        WHEN 6 THEN '×'
+      CASE
+        WHEN shirushi_kubun_yosou_tansho_ninkijun = '1～3' AND shirushi_kubun_rank = 1 THEN '◎'
+        WHEN shirushi_kubun_yosou_tansho_ninkijun = '4～6' AND shirushi_kubun_rank = 1 THEN '○'
+        WHEN shirushi_kubun_yosou_tansho_ninkijun = '4～6' AND shirushi_kubun_rank = 2 THEN '▲'
+        WHEN shirushi_kubun_yosou_tansho_ninkijun = '1～3' AND shirushi_kubun_rank = 2 THEN '△'
+        WHEN shirushi_kubun_yosou_tansho_ninkijun = '7以上' AND shirushi_kubun_rank = 1 THEN '★'
+        WHEN shirushi_kubun_yosou_tansho_ninkijun = '7以上' AND shirushi_kubun_rank = 2 THEN '×'
         ELSE NULL
       END AS shirushi_shirushi_label,
       CASE
-        WHEN shirushi_kubun_rank BETWEEN 1 AND 6 THEN shirushi_kubun_rank
+        WHEN shirushi_kubun_yosou_tansho_ninkijun = '1～3' AND shirushi_kubun_rank = 1 THEN 1
+        WHEN shirushi_kubun_yosou_tansho_ninkijun = '4～6' AND shirushi_kubun_rank = 1 THEN 2
+        WHEN shirushi_kubun_yosou_tansho_ninkijun = '4～6' AND shirushi_kubun_rank = 2 THEN 3
+        WHEN shirushi_kubun_yosou_tansho_ninkijun = '1～3' AND shirushi_kubun_rank = 2 THEN 4
+        WHEN shirushi_kubun_yosou_tansho_ninkijun = '7以上' AND shirushi_kubun_rank = 1 THEN 5
+        WHEN shirushi_kubun_yosou_tansho_ninkijun = '7以上' AND shirushi_kubun_rank = 2 THEN 6
         ELSE NULL
       END AS shirushi_shirushi_num
     FROM shirushi_calc
