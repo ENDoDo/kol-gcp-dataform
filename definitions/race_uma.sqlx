@@ -1886,8 +1886,8 @@ SELECT
 FROM
   with_zensou_data AS z
 LEFT JOIN
-  partner_lookup AS p_lookup
-  ON z.race_code_uma_kol = p_lookup.race_code_uma_kol
+  partner_lookup AS pl
+  ON z.race_code_uma_kol = pl.race_code_uma_kol
 LEFT JOIN
   shirushi_final AS sc
   ON z.race_code_uma_kol = sc.race_code_uma_kol
