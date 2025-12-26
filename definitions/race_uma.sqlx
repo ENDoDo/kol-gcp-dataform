@@ -776,11 +776,30 @@ WITH
           WHEN yosou_tansho_ninkijun_num BETWEEN 1 AND 3 THEN '1～3'
           WHEN yosou_tansho_ninkijun_num BETWEEN 4 AND 6 THEN '4～6'
           WHEN yosou_tansho_ninkijun_num >= 7 OR yosou_tansho_odds_float >= 50.0 THEN '7以上'
-          ELSE NULL
+        ELSE NULL
         END
         ORDER BY shirushi_point DESC, yosou_tansho_ninkijun_num ASC
       ) AS shirushi_kubun_rank
     FROM shirushi_points
+  ),
+
+  shirushi_final AS (
+    SELECT
+      *,
+      CASE shirushi_kubun_rank
+        WHEN 1 THEN '◎'
+        WHEN 2 THEN '○'
+        WHEN 3 THEN '▲'
+        WHEN 4 THEN '△'
+        WHEN 5 THEN '★'
+        WHEN 6 THEN '×'
+        ELSE NULL
+      END AS shirushi_shirushi_label,
+      CASE
+        WHEN shirushi_kubun_rank BETWEEN 1 AND 6 THEN shirushi_kubun_rank
+        ELSE NULL
+      END AS shirushi_shirushi_num
+    FROM shirushi_calc
   )
 
 -- Final Step: 全ての情報を結合し、最終的なカラムを生成
@@ -1850,8 +1869,8 @@ SELECT
   sc.shirushi_point,
   sc.shirushi_kubun_yosou_tansho_ninkijun,
   sc.shirushi_kubun_rank,
-  CAST(NULL AS STRING) AS shirushi_shirushi_label,
-  CAST(NULL AS INT64) AS shirushi_shirushi_num,
+  sc.shirushi_shirushi_label,
+  sc.shirushi_shirushi_num,
   CURRENT_TIMESTAMP() AS created,
   CURRENT_TIMESTAMP() AS modified
 FROM
@@ -1860,7 +1879,7 @@ LEFT JOIN
   partner_lookup AS p_lookup
   ON z.race_code_uma_kol = p_lookup.race_code_uma_kol
 LEFT JOIN
-  shirushi_calc AS sc
+  shirushi_final AS sc
   ON z.race_code_uma_kol = sc.race_code_uma_kol
 LEFT JOIN
   ${ref("races_uma_odds_jvd_new")} AS odds
