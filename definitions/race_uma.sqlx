@@ -76,6 +76,8 @@ config {
     chokyo_kijosha: "調教騎乗者",
     chokyo_kijosha_kubun: "調教騎乗者区分",
     chokyo_kijosha_equal_kishumei_flag: "調教騎乗騎手がレースでも騎乗フラグ",
+    chokyo_nengappi: "追い切り 調教年月日",
+    chokyo_nengappi_label: "追い切り 調教年月日 文字列 y年m月d日(曜日)",
     chokyo_nengappi_date: "調教年月日",
     chokyo_basho: "調教場所",
     chokyo_course: "調教コース",
@@ -925,6 +927,8 @@ SELECT
     WHEN TRIM(z.chokyo_kijosha) = TRIM(z.kishumei_ryakusho) THEN 'はい'
     ELSE 'いいえ'
   END AS chokyo_kijosha_equal_kishumei_flag,
+  z.chokyo_nengappi,
+  FORMAT_DATE('%Y年%m月%d日', SAFE.PARSE_DATE('%Y%m%d', z.chokyo_nengappi)) || '(' || CASE EXTRACT(DAYOFWEEK FROM SAFE.PARSE_DATE('%Y%m%d', z.chokyo_nengappi)) WHEN 1 THEN '日' WHEN 2 THEN '月' WHEN 3 THEN '火' WHEN 4 THEN '水' WHEN 5 THEN '木' WHEN 6 THEN '金' WHEN 7 THEN '土' END || ')' AS chokyo_nengappi_label,
   SAFE.PARSE_DATE('%Y%m%d', z.chokyo_nengappi) AS chokyo_nengappi_date,
   z.chokyo_basho,
   z.chokyo_course,
