@@ -658,6 +658,16 @@ WITH
   with_zensou_data AS (
     SELECT
       *,
+      CASE
+        WHEN chokyo_course = '坂' THEN '坂路'
+        WHEN chokyo_course = 'Ｐ' OR chokyo_course = 'P' THEN 'ポリトラック'
+        WHEN chokyo_basho = 'プール' THEN 'プール'
+        ELSE 'コース'
+      END AS chokyo_course_kubun,
+
+      -- 前走データの取得ロジック
+      -- PARTITION BY は race_code_uma_kol (馬毎) で行う
+      LAG(race_code_kol) OVER (PARTITION BY race_code_uma_kol ORDER BY hasso_date, race_code_kol) AS text_zensou_race_code_kol,
       LAG(bataiju, 1) OVER (PARTITION BY ketto_toroku_bango ORDER BY hasso_date) AS bataiju_zensou,
       LAG(kyori_kubun, 1) OVER (PARTITION BY ketto_toroku_bango ORDER BY hasso_date) AS kyori_kubun_zensou,
       LAG(kyori, 1) OVER (PARTITION BY ketto_toroku_bango ORDER BY hasso_date) AS kyori_zensou,
