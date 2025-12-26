@@ -5,3 +5,9 @@ declare({
   schema: "jvd_odds",
   name: "races_uma_odds_jvd_new"
 });
+
+declare({
+  database: "smartkeiba",
+  schema: "jvd_odds",
+  name: "races_uma_odds_kol"
+});

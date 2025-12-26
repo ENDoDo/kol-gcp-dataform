@@ -291,6 +291,18 @@ config {
     tansho_ninkijun_num: "単勝人気順(整数)",
     tansho_odds: "単勝オッズ",
     tansho_odds_float: "単勝オッズ(小数点)",
+    yosou_tansho_ninkijun_num: "予想オッズ 単勝人気順",
+    yosou_tansho_odds_float: "予想オッズ 小数点第一位まで",
+    // 印（Shirushi）カラム
+    shirushi_hanro_4f_flag: "坂路4F最速フラグ",
+    shirushi_hanro_1f_flag: "坂路1F最速フラグ",
+    shirushi_wood_6f_flag: "ウッド6F最速フラグ",
+    shirushi_wood_1f_flag: "ウッド1F最速フラグ",
+    shirushi_point: "印ポイント",
+    shirushi_kubun_yosou_tansho_ninkijun: "予想人気順区分",
+    shirushi_kubun_rank: "人気区分内順位",
+    shirushi_shirushi_label: "予想印ラベル",
+    shirushi_shirushi_num: "予想印数値",
     sokuhou_tansho_ninkijun_num: "速報 単勝人気順",
     sokuhou_tansho_odds_float: "速報 オッズ 小数点第一位まで",
     sokuhou_happyo_tsukihi_jifun: "速報 発表 時分",
@@ -347,6 +359,9 @@ config {
 
 -- CTE Step1: 全てのソーステーブルを結合し、基本的な整形を行うベーステーブルを作成
 WITH
+  races_uma_odds_kol AS (
+    SELECT * FROM ${ref("jvd_odds", "races_uma_odds_kol")}
+  ),
   base_data AS (
     SELECT
       d2.race_code_uma_kol,
@@ -417,6 +432,8 @@ WITH
       s2.corner3_juni,
       s2.corner4_juni,
       s2.corner4_ichidori,
+      o1.YosouTanNinki,
+      o1.YosouTanOdds,
       -- Chokyo Dynamic Selection Logic
       CASE
         WHEN d2.chokyo1_flag = '1' THEN d2.chokyo1_flag
@@ -633,6 +650,8 @@ WITH
       ${ref("kol_ket")} AS k ON d2.ketto_toroku_bango = k.ketto_toroku_bango_kol
     LEFT JOIN
       ${ref("kol_com1")} AS c1 ON d2.race_code_uma_kol = c1.race_code_uma_kol
+    LEFT JOIN
+      ${ref("races_uma_odds_kol")} AS o1 ON d2.race_code_uma_kol = o1.RaceUmaCode
   ),
 
 -- CTE Step2: ウィンドウ関数を使い、馬ごとに1つ前のレース情報を取得
@@ -667,6 +686,101 @@ WITH
       AND p.kaisai_nengappi < z.kaisai_nengappi
     QUALIFY
       ROW_NUMBER() OVER (PARTITION BY z.race_code_uma_kol ORDER BY p.kaisai_nengappi DESC) = 1
+  ),
+
+  -- CTE: Shirushi Logic Calculation
+  shirushi_calc_raw AS (
+    SELECT
+      race_code_uma_kol,
+      SUBSTR(race_code_uma_kol, 1, 16) AS race_code_kol,
+      -- Hanro (Slope) Logic
+      CASE
+        WHEN chokyo_course_kubun = '坂路' AND chokyo_4f_d2 IS NOT NULL
+        THEN RANK() OVER (
+          PARTITION BY SUBSTR(race_code_uma_kol, 1, 16), IF(chokyo_course_kubun = '坂路', 1, 0)
+          ORDER BY SAFE_CAST(REGEXP_REPLACE(chokyo_4f_d2, r'[^0-9.]', '') AS FLOAT64) ASC
+        )
+        ELSE NULL
+      END AS hanro_4f_rank,
+      CASE
+        WHEN chokyo_course_kubun = '坂路' AND chokyo_1f_d2 IS NOT NULL
+        THEN RANK() OVER (
+          PARTITION BY SUBSTR(race_code_uma_kol, 1, 16), IF(chokyo_course_kubun = '坂路', 1, 0)
+          ORDER BY SAFE_CAST(REGEXP_REPLACE(chokyo_1f_d2, r'[^0-9.]', '') AS FLOAT64) ASC
+        )
+        ELSE NULL
+      END AS hanro_1f_rank,
+
+      -- Wood Logic
+      CASE
+        WHEN ((chokyo_basho = '栗東' AND chokyo_course = 'CW') OR (chokyo_basho = '美南' AND chokyo_course = 'Ｗ'))
+             AND chokyo_6f_d2 IS NOT NULL
+        THEN RANK() OVER (
+          PARTITION BY SUBSTR(race_code_uma_kol, 1, 16),
+          IF(((chokyo_basho = '栗東' AND chokyo_course = 'CW') OR (chokyo_basho = '美南' AND chokyo_course = 'Ｗ')), 1, 0)
+          ORDER BY SAFE_CAST(REGEXP_REPLACE(chokyo_6f_d2, r'[^0-9.]', '') AS FLOAT64) ASC
+        )
+        ELSE NULL
+      END AS wood_6f_rank,
+      CASE
+        WHEN ((chokyo_basho = '栗東' AND chokyo_course = 'CW') OR (chokyo_basho = '美南' AND chokyo_course = 'Ｗ'))
+             AND chokyo_1f_d2 IS NOT NULL
+        THEN RANK() OVER (
+          PARTITION BY SUBSTR(race_code_uma_kol, 1, 16),
+          IF(((chokyo_basho = '栗東' AND chokyo_course = 'CW') OR (chokyo_basho = '美南' AND chokyo_course = 'Ｗ')), 1, 0)
+          ORDER BY SAFE_CAST(REGEXP_REPLACE(chokyo_1f_d2, r'[^0-9.]', '') AS FLOAT64) ASC
+        )
+        ELSE NULL
+      END AS wood_1f_rank,
+
+      -- Odds Logic
+      CAST(YosouTanNinki AS INT64) AS yosou_tansho_ninkijun_num,
+      CAST(YosouTanOdds AS FLOAT64) AS yosou_tansho_odds_float
+
+    FROM with_zensou_data
+  ),
+
+  shirushi_flags AS (
+    SELECT
+      *,
+      IF(hanro_4f_rank = 1, 1, 0) AS shirushi_hanro_4f_flag_int,
+      IF(hanro_1f_rank = 1, 1, 0) AS shirushi_hanro_1f_flag_int,
+      IF(wood_6f_rank = 1, 1, 0) AS shirushi_wood_6f_flag_int,
+      IF(wood_1f_rank = 1, 1, 0) AS shirushi_wood_1f_flag_int
+    FROM shirushi_calc_raw
+  ),
+
+  shirushi_points AS (
+    SELECT
+      *,
+      (shirushi_hanro_4f_flag_int + shirushi_hanro_1f_flag_int + shirushi_wood_6f_flag_int + shirushi_wood_1f_flag_int) AS shirushi_point
+    FROM shirushi_flags
+  ),
+
+  shirushi_calc AS (
+    SELECT
+      *,
+      IF(shirushi_hanro_4f_flag_int = 1, 'はい', NULL) AS shirushi_hanro_4f_flag,
+      IF(shirushi_hanro_1f_flag_int = 1, 'はい', NULL) AS shirushi_hanro_1f_flag,
+      IF(shirushi_wood_6f_flag_int = 1, 'はい', NULL) AS shirushi_wood_6f_flag,
+      IF(shirushi_wood_1f_flag_int = 1, 'はい', NULL) AS shirushi_wood_1f_flag,
+      CASE
+        WHEN yosou_tansho_ninkijun_num BETWEEN 1 AND 3 THEN '1～3'
+        WHEN yosou_tansho_ninkijun_num BETWEEN 4 AND 6 THEN '4～6'
+        WHEN yosou_tansho_ninkijun_num >= 7 OR yosou_tansho_odds_float >= 50.0 THEN '7以上'
+        ELSE NULL
+      END AS shirushi_kubun_yosou_tansho_ninkijun,
+      RANK() OVER (
+        PARTITION BY race_code_kol,
+        CASE
+          WHEN yosou_tansho_ninkijun_num BETWEEN 1 AND 3 THEN '1～3'
+          WHEN yosou_tansho_ninkijun_num BETWEEN 4 AND 6 THEN '4～6'
+          WHEN yosou_tansho_ninkijun_num >= 7 OR yosou_tansho_odds_float >= 50.0 THEN '7以上'
+          ELSE NULL
+        END
+        ORDER BY shirushi_point DESC, yosou_tansho_ninkijun_num ASC
+      ) AS shirushi_kubun_rank
+    FROM shirushi_points
   )
 
 -- Final Step: 全ての情報を結合し、最終的なカラムを生成
@@ -1727,14 +1841,27 @@ SELECT
   z.comment_kishu_kyusha,
   z.comment_next,
   z.comment_last,
+  CAST(z.YosouTanNinki AS INT64) AS yosou_tansho_ninkijun_num,
+  CAST(z.YosouTanOdds AS FLOAT64) AS yosou_tansho_odds_float,
+  sc.shirushi_hanro_4f_flag,
+  sc.shirushi_hanro_1f_flag,
+  sc.shirushi_wood_6f_flag,
+  sc.shirushi_wood_1f_flag,
+  sc.shirushi_point,
+  sc.shirushi_kubun_yosou_tansho_ninkijun,
+  sc.shirushi_kubun_rank,
+  CAST(NULL AS STRING) AS shirushi_shirushi_label,
+  CAST(NULL AS INT64) AS shirushi_shirushi_num,
   CURRENT_TIMESTAMP() AS created,
   CURRENT_TIMESTAMP() AS modified
 FROM
   with_zensou_data AS z
 LEFT JOIN
-  partner_lookup AS pl
-  ON z.race_code_uma_kol = pl.race_code_uma_kol
-
+  partner_lookup AS p_lookup
+  ON z.race_code_uma_kol = p_lookup.race_code_uma_kol
+LEFT JOIN
+  shirushi_calc AS sc
+  ON z.race_code_uma_kol = sc.race_code_uma_kol
 LEFT JOIN
   ${ref("races_uma_odds_jvd_new")} AS odds
   ON odds.RaceUmaCode = z.race_code_uma_kol
