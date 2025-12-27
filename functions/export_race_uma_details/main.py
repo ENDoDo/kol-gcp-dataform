@@ -172,6 +172,15 @@ def export_race_uma_details(request):
                     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
                     writer.writeheader()
                     writer.writerows(chunk)
+                    # ディレクトリ移動
+                    ftp_directory = os.environ.get("FTP_DIRECTORY")
+                    if ftp_directory:
+                        try:
+                            ftp.cwd(ftp_directory)
+                        except ftplib.error_perm:
+                            logger.info(f"ディレクトリ {ftp_directory} が存在しないため作成します。")
+                            ftp.mkd(ftp_directory)
+                            ftp.cwd(ftp_directory)
                     csv_content = csv_buffer.getvalue().encode('utf-8')
                     bio = io.BytesIO(csv_content)
                     ftp.storbinary(f"STOR {filename}", bio)
@@ -267,7 +276,7 @@ def export_race_uma_details(request):
             # 一時テーブルの削除
             bq_client.delete_table(temp_table_id, not_found_ok=True)
 
-        return f"成功。 {len(updates)} 行をエクスポートしました。", 200
+        return f"成功。 {processed_count} 行をエクスポートしました。", 200
 
     except Exception as e:
         logger.exception("実行中にエラーが発生しました。")
