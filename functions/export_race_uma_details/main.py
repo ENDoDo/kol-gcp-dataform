@@ -46,12 +46,6 @@ def ensure_state_table(bq_client, dataset_id, table_name):
         bq_client.create_table(table)
         logger.info(f"テーブル {table_ref} を作成しました。")
 
-def calculate_hash(row):
-    """行の内容のハッシュを計算し、変更を検知する"""
-    # 行の値を文字列に変換し、ハッシュ化のために連結する
-    # ソートして順序を一貫させる
-    row_str = json.dumps(dict(row), sort_keys=True, default=str)
-    return hashlib.sha256(row_str.encode('utf-8')).hexdigest()
 
 @functions_framework.http
 def export_race_uma_details(request):
@@ -69,11 +63,16 @@ def export_race_uma_details(request):
         ensure_state_table(bq_client, DATASET_ID, STATE_TABLE_NAME)
 
         # 4. 更新のクエリ
+        # BigQuery側でハッシュ計算と差分抽出を行い、Python側のメモリ負荷を軽減する
+        # created, modified は更新のたびに変わるため、ハッシュ計算から除外する
         query = f"""
-            WITH CurrentDetails AS (
+            WITH SourceWithHash AS (
                 SELECT
-                    *
-                FROM `{PROJECT_ID}.{DATASET_ID}.race_uma_details`
+                    *,
+                    TO_HEX(MD5(TO_JSON_STRING(
+                        (SELECT AS STRUCT * EXCEPT(created, modified) FROM UNNEST([t]))
+                    ))) as current_hash
+                FROM `{PROJECT_ID}.{DATASET_ID}.race_uma_details` t
             ),
             State AS (
                 SELECT
@@ -82,13 +81,15 @@ def export_race_uma_details(request):
                 FROM `{PROJECT_ID}.{DATASET_ID}.{STATE_TABLE_NAME}`
             )
             SELECT
-                c.*,
-                s.content_hash as old_hash
-            FROM CurrentDetails c
-            LEFT JOIN State s ON c.race_code_uma_jvd = s.race_code_uma_jvd
+                s.*
+            FROM SourceWithHash s
+            LEFT JOIN State st ON s.race_code_uma_jvd = st.race_code_uma_jvd
+            WHERE
+                st.content_hash IS NULL
+                OR st.content_hash != s.current_hash
         """
 
-        logger.info("BigQueryで変更をクエリ中...")
+        logger.info("BigQueryで変更をクエリ中(SQL側でハッシュ計算)...")
         query_job = bq_client.query(query)
         rows = list(query_job.result())
 
@@ -108,7 +109,7 @@ def export_race_uma_details(request):
             "kishu_shozokubasho_code", "kishu_shozokubasho_code_label", "kishu_shozoku_chokyoshi_code",
             "chokyoshi_code", "chokyoshimei", "chokyoshimei_ryakusho", "chokyoshi_shozokubasho_code", "chokyoshi_shozokubasho_code_label",
             "chokyoshi_tracen_kubun", "chokyoshi_tracen_kubun_label",
-            "chokyo_flag", "chokyo_flag_label", "chokyo_kijosha", "chokyo_kijosha_equal_kishumei_flag", "chokyo_nengappi_date",
+            "chokyo_flag", "chokyo_flag_label", "chokyo_kijosha", "chokyo_kijosha_equal_kishumei_flag", "chokyo_nengappi", "chokyo_nengappi_label", "chokyo_nengappi_date",
             "chokyo_basho", "chokyo_course", "chokyo_course_kubun", "chokyo_basho_course_label", "chokyo_babajotai", "chokyo_hanro_pool_kaisu_int",
             "chokyo_8f", "chokyo_8f_float", "chokyo_7f", "chokyo_7f_float", "chokyo_6f", "chokyo_6f_float", "chokyo_5f", "chokyo_5f_float",
             "chokyo_4f", "chokyo_4f_float", "chokyo_3f", "chokyo_3f_float", "chokyo_2f_float", "chokyo_1f", "chokyo_1f_float",
@@ -141,22 +142,17 @@ def export_race_uma_details(request):
         ]
 
         for row in rows:
+            # 既に更新分しか取得していない
             row_data = {field: row[field] for field in fieldnames}
 
-            # ハッシュ計算用データ（タイムスタンプは除外）
-            hash_data = row_data.copy()
-            del hash_data["created"]
-            del hash_data["modified"]
+            # current_hashはSQLで計算済み
+            current_hash = row["current_hash"]
 
-            current_hash = calculate_hash(hash_data)
-            old_hash = row["old_hash"]
-
-            if old_hash is None or current_hash != old_hash:
-                updates.append(row_data)
-                state_updates.append({
-                    "race_code_uma_jvd": row_data["race_code_uma_jvd"],
-                    "content_hash": current_hash
-                })
+            updates.append(row_data)
+            state_updates.append({
+                "race_code_uma_jvd": row_data["race_code_uma_jvd"],
+                "content_hash": current_hash
+            })
 
         logger.info(f"{len(updates)} 件の更新が見つかりました。")
 
