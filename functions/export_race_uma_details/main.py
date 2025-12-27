@@ -91,10 +91,13 @@ def export_race_uma_details(request):
 
         logger.info("BigQueryで変更をクエリ中(SQL側でハッシュ計算)...")
         query_job = bq_client.query(query)
-        rows = list(query_job.result())
+        # iteratorを取得（list()で全件取得しない）
+        rows_iterator = query_job.result()
 
-        updates = []
+        updates_chunk = []
         state_updates = []
+        CHUNK_SIZE = 1000
+        part_num = 1
 
         # CSV出力用フィールド定義
         fieldnames = [
@@ -141,84 +144,83 @@ def export_race_uma_details(request):
             "created", "modified"
         ]
 
-        for row in rows:
-            # 既に更新分しか取得していない
-            row_data = {field: row[field] for field in fieldnames}
+        def upload_chunk(chunk, current_part_num):
+            """チャンクデータをFTPにアップロードする内部関数"""
+            if not chunk:
+                return
 
-            # current_hashはSQLで計算済み
-            current_hash = row["current_hash"]
+            # 日付範囲の特定
+            chunk_dates = []
+            for item in chunk:
+                dt = item["hasso_date"]
+                if isinstance(dt, str):
+                     dt = datetime.datetime.strptime(dt, '%Y/%m/%d %H:%M:%S')
+                elif isinstance(dt, datetime.date):
+                     dt = datetime.datetime(dt.year, dt.month, dt.day)
+                chunk_dates.append(dt.strftime('%Y%m%d'))
 
-            updates.append(row_data)
-            state_updates.append({
-                "race_code_uma_jvd": row_data["race_code_uma_jvd"],
-                "content_hash": current_hash
-            })
+            c_min = min(chunk_dates)
+            c_max = max(chunk_dates)
+            table_name = "race_uma_details"
+            filename = f"{table_name}_{c_min}_{c_max}_part{current_part_num:03d}.csv"
 
-        logger.info(f"{len(updates)} 件の更新が見つかりました。")
-
-        if not updates:
-            return "更新はありませんでした。", 200
-
-        # 5. CSV生成とFTPアップロード
-        CHUNK_SIZE = 1000
-        table_name = "race_uma_details"
-
-        # hasso_date (YYYY/MM/DD HH:MM:SS) から YYYYMMDD を抽出してMin/Maxを取得
-        all_dates = []
-        for u in updates:
-            dt = u["hasso_date"]
-            if isinstance(dt, str):
-                 dt = datetime.datetime.strptime(dt, '%Y/%m/%d %H:%M:%S')
-            elif isinstance(dt, datetime.date):
-                 # date型の場合もあるのでdatetimeへ変換（時刻00:00:00）
-                 dt = datetime.datetime(dt.year, dt.month, dt.day)
-
-            all_dates.append(dt.strftime('%Y%m%d'))
-
-        min_date = min(all_dates)
-        max_date = max(all_dates)
-
-        # データをチャンクに分割
-        chunks = [updates[i:i + CHUNK_SIZE] for i in range(0, len(updates), CHUNK_SIZE)]
-        total_parts = len(chunks)
-
-        logger.info(f"FTPホスト {FTP_HOST} へアップロード中... (合計 {len(updates)} 件 - {total_parts} ファイル)")
-
-        try:
-            with ftplib.FTP(FTP_HOST) as ftp:
-                ftp.login(user=ftp_user, passwd=ftp_pass)
-
-                # ディレクトリ移動（必要に応じて環境変数に追加）
-                # ftp_directory = os.environ.get("FTP_DIRECTORY")
-                # if ftp_directory: ...
-
-                for i, chunk in enumerate(chunks):
-                    # ファイル名の生成
-                    if total_parts > 1:
-                        # 分割あり: {table_name}_{from}_{to}_part{NNN}.csv
-                        part_num = i + 1
-                        filename = f"{table_name}_{min_date}_{max_date}_part{part_num:03d}.csv"
-                    else:
-                        # 分割なし: {table_name}_{from}_{to}.csv
-                        filename = f"{table_name}_{min_date}_{max_date}.csv"
-
-                    logger.info(f"CSVを生成中... ({filename})")
+            logger.info(f"FTPへアップロード中... ({filename}, {len(chunk)} rows)")
+            try:
+                with ftplib.FTP(FTP_HOST) as ftp:
+                    ftp.login(user=ftp_user, passwd=ftp_pass)
                     csv_buffer = io.StringIO()
                     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
                     writer.writeheader()
                     writer.writerows(chunk)
                     csv_content = csv_buffer.getvalue().encode('utf-8')
-
                     bio = io.BytesIO(csv_content)
                     ftp.storbinary(f"STOR {filename}", bio)
-                    logger.info(f"{filename} のアップロードに成功しました。")
+                    logger.info(f"{filename} のアップロード完了")
+            except Exception as e:
+                logger.error(f"FTPアップロードエラー: {filename}, {e}")
+                # 再送ロジックを入れるか、ここではエラーとして処理を継続するか
+                # 今回はログを出して再送せず、例外を送出して止める
+                raise e
 
-        except Exception as e:
-            logger.error(f"FTPアップロードに失敗しました: {e}")
-            return f"FTPアップロード失敗: {e}", 500
+        processed_count = 0
 
-        # 7. 状態管理テーブルの更新
-        logger.info("状態管理テーブルを更新中...")
+        # イテレータを回してストリーミング処理
+        for row in rows_iterator:
+            # Rowデータを辞書化
+            row_data = {field: row[field] for field in fieldnames}
+
+            # ハッシュ
+            current_hash = row["current_hash"]
+
+            # バッファに追加
+            updates_chunk.append(row_data)
+            # 状態更新用
+            state_updates.append({
+                "race_code_uma_jvd": row_data["race_code_uma_jvd"],
+                "content_hash": current_hash
+            })
+
+            # チャンクサイズに達したらアップロード
+            if len(updates_chunk) >= CHUNK_SIZE:
+                upload_chunk(updates_chunk, part_num)
+                processed_count += len(updates_chunk)
+                updates_chunk = [] # バッファクリア
+                part_num += 1
+
+        # 残りのチャンクがあればアップロード
+        if updates_chunk:
+            upload_chunk(updates_chunk, part_num)
+            processed_count += len(updates_chunk)
+
+        logger.info(f"合計 {processed_count} 件をエクスポートしました。")
+
+        if processed_count == 0:
+             return "更新はありませんでした。", 200
+
+        # 7. 状態管理テーブルの更新 (state_updatesはメモリに残っている前提)
+        # 数十万件の場合はここでもメモリ不足になる可能性があるため、state_updatesもチャンク分割して一時テーブルにロード推奨だが
+        # まずは8GBメモリを信じて一括ロードを試みる
+        logger.info(f"状態管理テーブルを更新中... ({len(state_updates)} updates)")
         if state_updates:
             # MERGEを使用して状態をUPSERT
 
@@ -232,7 +234,7 @@ def export_race_uma_details(request):
                 for u in state_updates
             ]
 
-            # 1. 一時テーブルへのロード
+            # 1. 一時テーブルへのロード (JSONロードは大量データに弱い場合があるが、hashとIDだけなら耐えられるか)
             job_config = bigquery.LoadJobConfig(
                 write_disposition="WRITE_TRUNCATE",
                 schema=[
@@ -242,6 +244,9 @@ def export_race_uma_details(request):
                 ]
             )
             temp_table_id = f"{PROJECT_ID}.{DATASET_ID}.temp_race_uma_details_state_updates"
+
+            # チャンク分割してロードすることを検討すべきだが、コード簡略化のため一括
+            # JSON Lines ファイルをGCSに書いてロードするのがベストプラクティスだが、ここでは直接ロード
             load_job = bq_client.load_table_from_json(rows_to_insert, temp_table_id, job_config=job_config)
             load_job.result() # 待機
 

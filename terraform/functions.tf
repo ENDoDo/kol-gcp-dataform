@@ -157,7 +157,7 @@ resource "google_cloudfunctions2_function" "export_race_uma_details" {
     max_instance_count = 1
     available_memory   = "8192M" # メモリ不足解消のため増強
     available_cpu      = "4"     # 4GB以上のメモリには2CPU以上が必要、8GBなら4CPU推奨
-    timeout_seconds    = 540
+    timeout_seconds    = 3600
     environment_variables = {
       PROJECT_ID  = var.project_id
       DATASET_ID  = terraform.workspace == "prd" ? var.prd_schema : var.stg_schema
